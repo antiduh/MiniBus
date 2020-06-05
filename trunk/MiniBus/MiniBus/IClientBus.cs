@@ -4,11 +4,12 @@ namespace MiniBus
 {
     public interface IClientBus
     {
+        void AddMessage<T>() where T : IMessage, new();
+
         IRequestContext StartRequest();
 
-        //void ListenEvent<T>() where T : IMessage;
-
         void SendMessage( Envelope msg );
+
     }
 
     public interface IRequestContext
