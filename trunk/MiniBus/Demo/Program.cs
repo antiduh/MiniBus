@@ -46,8 +46,8 @@ namespace Demo
                 this.rabbitConnFactory = new ConnectionFactory()
                 {
                     HostName = "localhost",
-                    UserName = "antiduh",
-                    Password = "password",
+                    UserName = "guest",
+                    Password = "guest",
                     VirtualHost = "sdv-test",
                 };
             }
