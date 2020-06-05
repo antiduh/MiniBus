@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using MiniBus;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -17,12 +18,15 @@ namespace Demo
 
         private MessageDefRegistry msgReg;
 
+        private Dictionary<string, IMsgReader> msgReaders;
+
         public RabbitClientBus( IModel channel )
         {
             this.channel = channel;
 
             this.pendingConversations = new Dictionary<Guid, RabbitRequestContext>();
             this.msgReg = new MessageDefRegistry();
+            this.msgReaders = new Dictionary<string, IMsgReader>();
 
             this.rabbitConsumer = new EventingBasicConsumer( this.channel );
             this.rabbitConsumer.Received += DispatchReceivedRabbitMsg;
@@ -55,6 +59,13 @@ namespace Demo
             this.channel.BasicPublish( msgDef.Exchange, msgDef.RoutingKey, props, body );
         }
 
+        public void AddMessage<T>() where T : IMessage, new()
+        {
+            MessageDef msgDef = this.msgReg.Get<T>();
+
+            this.msgReaders.Add( msgDef.Name, new MsgReader<T>() );
+        }
+
         public IRequestContext StartRequest()
         {
             var context = new RabbitRequestContext( this );
@@ -71,17 +82,42 @@ namespace Demo
             if( e.BasicProperties.CorrelationId != null && 
                 this.pendingConversations.TryGetValue( new Guid( e.BasicProperties.CorrelationId ), out requestContext ) )
             {
+                
+                string msgName;
+                string payload;
+                Serializer.ReadBody( e.Body.ToArray(), out msgName, out payload );
+
+                // TODO error handling.
+                IMessage msg = this.msgReaders[msgName].Read();
+                msg.Read( payload );
+
                 Envelope env = new Envelope()
                 {
                     CorrId = e.BasicProperties.CorrelationId,
-                    SendRepliesTo = e.BasicProperties.ReplyTo
+                    SendRepliesTo = e.BasicProperties.ReplyTo,
+                    Message = msg
                 };
 
                 requestContext.DispatchMessage( env );
             }
         }
 
-        public class RabbitRequestContext : IRequestContext
+        private interface IMsgReader
+        {
+            IMessage Read();
+        }
+
+        private class MsgReader<T> 
+            : IMsgReader 
+            where T : IMessage, new()
+        {
+            public IMessage Read()
+            {
+                return new T();
+            }
+        }
+
+        private class RabbitRequestContext : IRequestContext
         {
             private readonly RabbitClientBus bus;
             private string exchange;
@@ -125,6 +161,8 @@ namespace Demo
 
                 if( env.SendRepliesTo != null )
                 {
+                    throw new NotImplementedException();
+
                     // The reply sent us a redirect to a private queue.
                     this.exchange = "";
                     this.destQueue = env.SendRepliesTo;
