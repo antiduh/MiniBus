@@ -11,6 +11,7 @@ namespace Echo.Client
         public EchoClient( IClientBus bus )
         {
             this.bus = bus;
+            this.bus.AddMessage<EchoReply>();
         }
 
         public void DoEcho( string text )
@@ -21,12 +22,16 @@ namespace Echo.Client
 
             Envelope response = request.WaitResponse( TimeSpan.FromSeconds( 5.0 ) );
 
-            if( response.Message is EchoRequest echoResponse )
+            if( response.Message is EchoReply echoReply )
             {
-                if( echoResponse.EchoMsg != text )
+                if( echoReply.EchoMsg != text )
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            else
+            {
+                throw new InvalidOperationException();
             }
         }
     }
