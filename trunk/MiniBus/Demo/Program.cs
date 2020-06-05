@@ -47,7 +47,7 @@ namespace Demo
                 {
                     HostName = "localhost",
                     UserName = "antiduh",
-                    Password = "passwordpassw",
+                    Password = "password",
                     VirtualHost = "sdv-test",
                 };
             }
