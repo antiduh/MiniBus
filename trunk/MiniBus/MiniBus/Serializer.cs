@@ -4,13 +4,14 @@ using System.Text;
 
 namespace MiniBus
 {
+    // This sucks, but it's a demo.
     public static class Serializer
     {
-        public static void ReadBody( byte[] body, out string msgId, out string payload )
+        public static void ReadBody( byte[] body, out string msgName, out string payload )
         {
             var reader = new StreamReader( new MemoryStream( body ) );
 
-            msgId = reader.ReadLine();
+            msgName = reader.ReadLine();
             payload = reader.ReadToEnd();
         }
 
