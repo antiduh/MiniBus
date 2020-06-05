@@ -37,10 +37,15 @@ namespace MiniBus.Services
 
             ProvisionRabbit( def );
 
-            this.handlers.Add( def.Name, new RegistrationContainer<T>( handler ) );
+            this.handlers.Add( def.Name, new RegistrationContainer<T>( this, handler ) );
         }
 
         public void SendMessage( Envelope envelope )
+        {
+            SendMessage( envelope, null, null );
+        }
+
+        public void SendMessage( Envelope envelope, string exchange, string routingKey )
         {
             MessageDef msgDef = this.msgReg.Get( envelope.Message );
 
@@ -59,27 +64,34 @@ namespace MiniBus.Services
                 props.ReplyTo = envelope.SendRepliesTo;
             }
 
+            if( exchange == null )
+            {
+                exchange = msgDef.Exchange;
+            }
+
+            if( routingKey == null )
+            {
+                routingKey = msgDef.RoutingKey;
+            }
+
             ReadOnlyMemory<byte> body = Serializer.MakeBody( msgDef, envelope.Message );
-            this.channel.BasicPublish( msgDef.Exchange, msgDef.RoutingKey, props, body );
+            this.channel.BasicPublish( exchange, routingKey, props, body );
         }
 
         private void DispatchReceivedRabbitMsg( object sender, BasicDeliverEventArgs e )
         {
-            // This sucks, but I don't care.
-            string msgId, payload;
-            Serializer.ReadBody( e.Body.ToArray(), out msgId, out payload );
+            string msgName, payload;
+            Serializer.ReadBody( e.Body.ToArray(), out msgName, out payload );
 
             IRegistrationContainer handler;
 
-            if( this.handlers.TryGetValue( msgId, out handler ) )
+            if( this.handlers.TryGetValue( msgName, out handler ) )
             {
-                // TODO consumer context
-                handler.Deliver( null, payload );
+                handler.Deliver( payload, e.BasicProperties.CorrelationId, e.BasicProperties.ReplyTo );
             }
             else
             {
-                // TODO error reporting.
-                Console.WriteLine( $"Failure: No handler registered for message: {msgId}." );
+                Console.WriteLine( $"Failure: No handler registered for message: {msgName}." );
             }
         }
 
@@ -117,36 +129,42 @@ namespace MiniBus.Services
 
         private interface IRegistrationContainer
         {
-            void Deliver( IConsumeContext consumeContext, string payload );
+            void Deliver( string payload, string senderCorrId, string senderReplyTo );
         }
 
         private class RegistrationContainer<T> : IRegistrationContainer where T : IMessage, new()
         {
+            private readonly RabbitServerBus parent;
             private readonly Action<IConsumeContext, T> handler;
 
-            public RegistrationContainer( Action<IConsumeContext, T> handler )
+            public RegistrationContainer( RabbitServerBus parent, Action<IConsumeContext, T> handler )
             {
+                this.parent = parent;
                 this.handler = handler;
             }
 
-            public void Deliver( IConsumeContext consumeContext, string payload )
+            public void Deliver( string payload, string senderCorrId, string senderReplyTo )
             {
                 T msg = new T();
                 msg.Read( payload );
+
+                var consumeContext = new RabbitConsumeContext( this.parent, senderCorrId, senderReplyTo );
 
                 this.handler.Invoke( consumeContext, msg );
             }
         }
 
-        public class RabbitConsumeContext : IConsumeContext
+        private class RabbitConsumeContext : IConsumeContext
         {
             private readonly RabbitServerBus parent;
-            private readonly Envelope replyContext;
+            private readonly string senderCorrId;
+            private readonly string senderReplyTo;
 
-            public RabbitConsumeContext( RabbitServerBus parent, Envelope replyContext )
+            public RabbitConsumeContext( RabbitServerBus parent, string senderCorrId, string senderReplyTo )
             {
                 this.parent = parent;
-                this.replyContext = replyContext;
+                this.senderCorrId = senderCorrId;
+                this.senderReplyTo = senderReplyTo;
             }
 
             public void Reply( IMessage msg )
@@ -154,8 +172,17 @@ namespace MiniBus.Services
                 Envelope reply = new Envelope()
                 {
                     Message = msg,
-                    CorrId = this.replyContext.CorrId,
+                    CorrId = this.senderCorrId,
                 };
+
+                if( this.senderReplyTo == null )
+                {
+                    this.parent.SendMessage( reply );
+                }
+                else
+                {
+                    this.parent.SendMessage( reply, "", this.senderReplyTo );
+                }
             }
         }
     }
