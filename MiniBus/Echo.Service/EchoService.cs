@@ -1,4 +1,5 @@
-﻿using Echo.Client.Messages;
+﻿using System;
+using Echo.Client.Messages;
 using MiniBus;
 using MiniBus.Services;
 using RabbitMQ.Client;
@@ -7,17 +8,17 @@ namespace Echo.Service
 {
     public class EchoService
     {
-        private IModel channel;
-        private RabbitServerBus bus;
+        private readonly int index;
+        private IServerBus bus;
 
-        public EchoService()
+        public EchoService( int index )
         {
+            this.index = index;
         }
 
-        public void Connect( IModel channel )
+        public void Connect( IServerBus bus )
         {
-            this.channel = channel;
-            this.bus = new RabbitServerBus( this.channel );
+            this.bus = bus;
 
             this.bus.RegisterHandler<EchoRequest>( HandleEchoRequest );
         }
