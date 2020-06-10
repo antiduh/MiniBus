@@ -106,7 +106,7 @@ namespace MiniBus.Services
                 this.knownExchanges.Add( msgDef.Exchange );
             }
 
-            // Listen on the well-known queue.
+            // Declare and listen on the well-known queue.
             this.channel.QueueDeclare(
                 queue: msgDef.Queue,
                 durable: true,
