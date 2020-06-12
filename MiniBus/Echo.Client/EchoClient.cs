@@ -11,7 +11,7 @@ namespace Echo.Client
         public EchoClient( IClientBus bus )
         {
             this.bus = bus;
-            this.bus.AddMessage<EchoReply>();
+            this.bus.KnownMessage<EchoReply>();
         }
 
         public void DoEcho( string text )

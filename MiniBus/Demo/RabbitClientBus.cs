@@ -59,7 +59,7 @@ namespace Demo
             this.channel.BasicPublish( msgDef.Exchange, msgDef.RoutingKey, props, body );
         }
 
-        public void AddMessage<T>() where T : IMessage, new()
+        public void KnownMessage<T>() where T : IMessage, new()
         {
             MessageDef msgDef = this.msgReg.Get<T>();
 
@@ -82,7 +82,6 @@ namespace Demo
             if( e.BasicProperties.CorrelationId != null && 
                 this.pendingConversations.TryGetValue( new Guid( e.BasicProperties.CorrelationId ), out requestContext ) )
             {
-                
                 string msgName;
                 string payload;
                 Serializer.ReadBody( e.Body.ToArray(), out msgName, out payload );
