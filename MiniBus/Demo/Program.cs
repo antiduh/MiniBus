@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Echo.Client;
 using Echo.Service;
@@ -23,7 +22,7 @@ namespace Demo
                 service.Connect( new RabbitServerBus( conn.Connect() ) );
 
                 var client1 = new EchoClient( new RabbitClientBus( conn.Connect() ) );
-                
+
                 Console.WriteLine( "Demo starting." );
 
                 for( int i = 0; i < 60; i++ )

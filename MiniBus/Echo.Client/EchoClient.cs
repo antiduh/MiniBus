@@ -20,7 +20,7 @@ namespace Echo.Client
             request.SendMessage( new EchoRequest( text ) );
 
             var response = request.WaitResponse<EchoReply>( TimeSpan.FromSeconds( 5.0 ) );
-         
+
             if( response.EchoMsg != text )
             {
                 throw new InvalidOperationException();

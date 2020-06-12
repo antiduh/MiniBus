@@ -2,7 +2,6 @@
 using Echo.Client.Messages;
 using MiniBus;
 using MiniBus.Services;
-using RabbitMQ.Client;
 
 namespace Echo.Service
 {
