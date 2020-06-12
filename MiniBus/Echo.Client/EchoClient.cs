@@ -17,7 +17,7 @@ namespace Echo.Client
         public void DoEcho( string text )
         {
             var request = this.bus.StartRequest();
-            request.SendMessage( new EchoRequest() { EchoMsg = text } );
+            request.SendMessage( new EchoRequest( text ) );
 
             var response = request.WaitResponse<EchoReply>( TimeSpan.FromSeconds( 5.0 ) );
          
