@@ -6,6 +6,11 @@ namespace Echo.Client.Messages
     [Exchange( ExchangeType.Topic, "voren-core" )]
     public class EchoRequest : IMessage
     {
+        public EchoRequest( string echoMsg )
+        {
+            EchoMsg = echoMsg;
+        }
+
         public string EchoMsg { get; set; }
 
         void IMessage.Read( string payload )
