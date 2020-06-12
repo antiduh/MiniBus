@@ -17,19 +17,11 @@ namespace Echo.Client
         public void DoEcho( string text )
         {
             var request = this.bus.StartRequest();
-
             request.SendMessage( new EchoRequest() { EchoMsg = text } );
 
-            Envelope response = request.WaitResponse( TimeSpan.FromSeconds( 5.0 ) );
-
-            if( response.Message is EchoReply echoReply )
-            {
-                if( echoReply.EchoMsg != text )
-                {
-                    throw new InvalidOperationException();
-                }
-            }
-            else
+            var response = request.WaitResponse<EchoReply>( TimeSpan.FromSeconds( 5.0 ) );
+         
+            if( response.EchoMsg != text )
             {
                 throw new InvalidOperationException();
             }

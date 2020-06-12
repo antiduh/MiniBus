@@ -16,6 +16,8 @@ namespace MiniBus
     {
         void SendMessage( IMessage msg );
 
-        Envelope WaitResponse( TimeSpan timeout );
+        IMessage WaitResponse( TimeSpan timeout );
+
+        T WaitResponse<T>( TimeSpan timeout ) where T : IMessage;
     }
 }
