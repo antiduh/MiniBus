@@ -17,43 +17,23 @@ namespace Demo
         [STAThread]
         private static void Main()
         {
-            Console.WriteLine( "Demo starting." );
-
-            var conn = new RabbitConn();
-            IModel channel = conn.Connect();
-
-            var service = new EchoService( 0 );
-            service.Connect( new RabbitServerBus( conn.Connect() ) );
-
-            var service2 = new EchoService( 1 );
-            service2.Connect( new RabbitServerBus( conn.Connect() ) );
-
-            var client1 = new EchoClient( new RabbitClientBus( conn.Connect() ) );
-            var client2 = new EchoClient( new RabbitClientBus( conn.Connect() ) );
-
-            Task task1 = Task.Run( () =>
+            using( var conn = new RabbitConn() )
             {
-                for( int i = 0; i < 5000; i++ )
+                var service = new EchoService( 0 );
+                service.Connect( new RabbitServerBus( conn.Connect() ) );
+
+                var client1 = new EchoClient( new RabbitClientBus( conn.Connect() ) );
+                
+                Console.WriteLine( "Demo starting." );
+
+                for( int i = 0; i < 60; i++ )
                 {
+                    Thread.Sleep( 1000 );
                     client1.DoEcho( "Hello" );
                 }
-            } );
-
-            Task task2 = Task.Run( () =>
-            {
-                for( int i = 0; i < 5000; i++ )
-                {
-                    client2.DoEcho( "Hello" );
-                }
-            } );
-
-            task1.Wait();
-            task2.Wait();
+            }
 
             MessageBox.Show( "Done" );
-            
-            conn.Dispose();
-
             Console.WriteLine( "Demo exiting." );
         }
 
@@ -73,6 +53,7 @@ namespace Demo
                     UserName = "guest",
                     Password = "guest",
                     VirtualHost = "sdv-test",
+                    AutomaticRecoveryEnabled = true,
                 };
             }
 
