@@ -87,7 +87,13 @@ namespace Demo
                 string payload;
                 Serializer.ReadBody( e.Body.ToArray(), out msgName, out payload );
 
-                // TODO error handling.
+                if( this.msgReaders.ContainsKey( msgName ) == false )
+                {
+                    throw new InvalidOperationException(
+                        $"Failed to deserialize unknown message '{msgName}'."
+                    );
+                }
+
                 IMessage msg = this.msgReaders[msgName].Read();
                 msg.Read( payload );
 
