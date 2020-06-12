@@ -94,8 +94,7 @@ namespace Demo
                     );
                 }
 
-                IMessage msg = this.msgReaders[msgName].Read();
-                msg.Read( payload );
+                IMessage msg = this.msgReaders[msgName].Read( payload );
 
                 Envelope env = new Envelope()
                 {
@@ -110,16 +109,21 @@ namespace Demo
 
         private interface IMsgReader
         {
-            IMessage Read();
+            IMessage Read( string payload );
         }
 
         private class MsgReader<T> 
             : IMsgReader 
             where T : IMessage, new()
         {
-            public IMessage Read()
+            public IMessage Read( string payload )
             {
-                return new T();
+                var msg = new T();
+                
+                msg.Read( payload );
+
+                return msg;
+
             }
         }
 
