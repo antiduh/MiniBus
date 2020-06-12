@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 using MiniBus;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -79,7 +78,7 @@ namespace Demo
         {
             RabbitRequestContext requestContext;
 
-            if( e.BasicProperties.CorrelationId != null && 
+            if( e.BasicProperties.CorrelationId != null &&
                 this.pendingConversations.TryGetValue( new Guid( e.BasicProperties.CorrelationId ), out requestContext ) )
             {
                 string msgName;
@@ -111,18 +110,17 @@ namespace Demo
             IMessage Read( string payload );
         }
 
-        private class MsgReader<T> 
-            : IMsgReader 
+        private class MsgReader<T>
+            : IMsgReader
             where T : IMessage, new()
         {
             public IMessage Read( string payload )
             {
                 var msg = new T();
-                
+
                 msg.Read( payload );
 
                 return msg;
-
             }
         }
 
@@ -155,7 +153,7 @@ namespace Demo
                     SendRepliesTo = bus.privateQueueName,
                     CorrId = this.ConversationId.ToString( "B" )
                 };
-                
+
                 bus.SendMessage( env );
             }
 
@@ -205,7 +203,6 @@ namespace Demo
 
                 return env;
             }
-
         }
     }
 }

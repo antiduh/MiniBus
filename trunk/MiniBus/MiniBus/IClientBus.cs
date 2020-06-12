@@ -9,7 +9,6 @@ namespace MiniBus
         IRequestContext StartRequest();
 
         void SendMessage( Envelope msg );
-
     }
 
     public interface IRequestContext

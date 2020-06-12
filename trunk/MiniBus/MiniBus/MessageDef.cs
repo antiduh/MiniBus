@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MiniBus
+﻿namespace MiniBus
 {
     public class MessageDef
     {
@@ -15,9 +13,9 @@ namespace MiniBus
         }
 
         public string Exchange { get; private set; }
-        
+
         public ExchangeType ExchangeType { get; }
-        
+
         public string Name { get; private set; }
 
         public string Queue { get; private set; }

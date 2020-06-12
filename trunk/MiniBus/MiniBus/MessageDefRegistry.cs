@@ -38,6 +38,5 @@ namespace MiniBus
 
             return this.messageMap[type];
         }
-
     }
 }

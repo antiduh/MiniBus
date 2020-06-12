@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace MiniBus
 {
-    [AttributeUsage( AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+    [AttributeUsage( AttributeTargets.Class, AllowMultiple = false, Inherited = false )]
     public class MsgNameAttribute : Attribute
     {
         private static readonly Regex parser = new Regex( @"(?<prefix>.+)\.(?<name>[^.]+)", RegexOptions.Compiled | RegexOptions.ExplicitCapture );

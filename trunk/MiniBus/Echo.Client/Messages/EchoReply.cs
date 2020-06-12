@@ -6,7 +6,9 @@ namespace Echo.Client.Messages
     [Exchange( ExchangeType.Topic, "voren-core" )]
     public class EchoReply : IMessage
     {
-        public EchoReply() { }
+        public EchoReply()
+        {
+        }
 
         public EchoReply( string echoMsg )
         {
