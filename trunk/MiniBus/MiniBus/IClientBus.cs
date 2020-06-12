@@ -4,7 +4,7 @@ namespace MiniBus
 {
     public interface IClientBus
     {
-        void AddMessage<T>() where T : IMessage, new();
+        void KnownMessage<T>() where T : IMessage, new();
 
         IRequestContext StartRequest();
 
