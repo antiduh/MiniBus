@@ -156,7 +156,33 @@ namespace Demo
                 bus.SendMessage( env );
             }
 
-            public Envelope WaitResponse( TimeSpan timeout )
+            public IMessage WaitResponse( TimeSpan timeout )
+            {
+                return WaitResponseInternal( timeout ).Message;
+            }
+
+            public T WaitResponse<T>( TimeSpan timeout ) where T : IMessage
+            {
+                Envelope envelope = WaitResponseInternal( timeout );
+
+                if( envelope.Message is T casted )
+                {
+                    return casted;
+                }
+                else
+                {
+                    throw new InvalidOperationException(
+                        $"Received unexpected message '{envelope.Message.GetType()}'."
+                    );
+                }
+            }
+
+            public void DispatchMessage( Envelope env )
+            {
+                this.inQueue.Add( env );
+            }
+
+            private Envelope WaitResponseInternal( TimeSpan timeout )
             {
                 Envelope env;
 
@@ -177,10 +203,6 @@ namespace Demo
                 return env;
             }
 
-            public void DispatchMessage( Envelope env )
-            {
-                this.inQueue.Add( env );
-            }
         }
     }
 }
