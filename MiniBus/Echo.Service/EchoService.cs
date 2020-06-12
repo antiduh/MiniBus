@@ -25,12 +25,7 @@ namespace Echo.Service
 
         private void HandleEchoRequest( IConsumeContext consumeContext, EchoRequest request )
         {
-            var reply = new EchoReply()
-            {
-                EchoMsg = request.EchoMsg,
-            };
-
-            consumeContext.Reply( reply );
+            consumeContext.Reply( new EchoReply( request.EchoMsg ) );
         }
     }
 }
