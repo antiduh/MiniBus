@@ -35,27 +35,19 @@ namespace Demo
             this.channel.BasicConsume( this.privateQueueName, true, this.rabbitConsumer );
         }
 
+
         public void SendMessage( Envelope envelope )
         {
             MessageDef msgDef = this.msgReg.Get( envelope.Message );
 
-            var props = this.channel.CreateBasicProperties();
+            SendMessageInternal( envelope, msgDef, msgDef.Exchange, msgDef.RoutingKey );
+        }
 
-            // Don't assign values to properties if they're null. Rabbit pays attention to whether or
-            // not a field was assigned. If it's been assigned, it'll try to serialize it, causing it
-            // to serialize a null field.
-            if( envelope.CorrId != null )
-            {
-                props.CorrelationId = envelope.CorrId;
-            }
+        public void SendMessage( Envelope envelope, string exchange, string routingKey )
+        {
+            MessageDef msgDef = this.msgReg.Get( envelope.Message );
 
-            if( envelope.SendRepliesTo != null )
-            {
-                props.ReplyTo = envelope.SendRepliesTo;
-            }
-
-            ReadOnlyMemory<byte> body = Serializer.MakeBody( msgDef, envelope.Message );
-            this.channel.BasicPublish( msgDef.Exchange, msgDef.RoutingKey, props, body );
+            SendMessageInternal( envelope, msgDef, exchange, routingKey );
         }
 
         public void KnownMessage<T>() where T : IMessage, new()
@@ -72,6 +64,27 @@ namespace Demo
             this.pendingConversations.Add( context.ConversationId, context );
 
             return context;
+        }
+
+        private void SendMessageInternal( Envelope envelope, MessageDef msgDef, string exchange, string routingKey )
+        {
+            var props = this.channel.CreateBasicProperties();
+
+            // Don't assign values to properties if they're null. Rabbit pays attention to whether or
+            // not a field was assigned. If it's been assigned, it'll try to serialize it, causing it
+            // to serialize a null field.
+            if( envelope.CorrId != null )
+            {
+                props.CorrelationId = envelope.CorrId;
+            }
+
+            if( envelope.SendRepliesTo != null )
+            {
+                props.ReplyTo = envelope.SendRepliesTo;
+            }
+
+            ReadOnlyMemory<byte> body = Serializer.MakeBody( msgDef, envelope.Message );
+            this.channel.BasicPublish( exchange, routingKey, props, body );
         }
 
         private void DispatchReceivedRabbitMsg( object sender, BasicDeliverEventArgs e )
@@ -127,20 +140,23 @@ namespace Demo
         private class RabbitRequestContext : IRequestContext
         {
             private readonly RabbitClientBus bus;
-            private string exchange;
             private BlockingCollection<Envelope> inQueue;
 
-            private string destQueue;
+            private bool haveRedirect;
+            private string redirectQueue;
 
             public RabbitRequestContext( RabbitClientBus bus )
             {
                 this.bus = bus;
 
-                this.destQueue = null;
+                this.redirectQueue = null;
 
                 this.ConversationId = Guid.NewGuid();
 
                 this.inQueue = new BlockingCollection<Envelope>();
+
+                this.haveRedirect = false;
+                this.redirectQueue = null;
             }
 
             public Guid ConversationId { get; private set; }
@@ -154,7 +170,14 @@ namespace Demo
                     CorrId = this.ConversationId.ToString( "B" )
                 };
 
-                bus.SendMessage( env );
+                if( haveRedirect == false )
+                {
+                    bus.SendMessage( env );
+                }
+                else
+                {
+                    bus.SendMessage( env, "", this.redirectQueue );
+                }
             }
 
             public IMessage WaitResponse( TimeSpan timeout )
@@ -194,11 +217,9 @@ namespace Demo
 
                 if( env.SendRepliesTo != null )
                 {
-                    throw new NotImplementedException();
-
                     // The reply sent us a redirect to a private queue.
-                    this.exchange = "";
-                    this.destQueue = env.SendRepliesTo;
+                    this.haveRedirect = true;
+                    this.redirectQueue = env.SendRepliesTo;
                 }
 
                 return env;

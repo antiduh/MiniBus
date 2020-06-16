@@ -21,6 +21,10 @@ namespace Demo
                 var service = new EchoService( 0 );
                 service.Connect( new RabbitServerBus( conn.Connect() ) );
 
+                var service2 = new EchoService( 1 );
+                service2.Connect( new RabbitServerBus( conn.Connect() ) );
+
+
                 var client1 = new EchoClient( new RabbitClientBus( conn.Connect() ) );
 
                 Console.WriteLine( "Demo starting." );
@@ -28,7 +32,7 @@ namespace Demo
                 for( int i = 0; i < 60; i++ )
                 {
                     Thread.Sleep( 1000 );
-                    client1.DoEcho( "Hello" );
+                    client1.DoMultiEcho( "Hello" );
                 }
             }
 

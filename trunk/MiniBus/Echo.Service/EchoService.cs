@@ -24,7 +24,11 @@ namespace Echo.Service
 
         private void HandleEchoRequest( IConsumeContext consumeContext, EchoRequest request )
         {
-            consumeContext.Reply( new EchoReply( request.EchoMsg ) );
+            Console.WriteLine( $"Service {index} handling echo request." );
+
+            var opts = new ReplyOptions() { RedirectReplies = true };
+
+            consumeContext.Reply( new EchoReply( request.EchoMsg ), opts ) ;
         }
     }
 }
