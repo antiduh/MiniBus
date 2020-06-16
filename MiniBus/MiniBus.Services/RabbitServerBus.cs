@@ -169,21 +169,32 @@ namespace MiniBus.Services
 
             public void Reply( IMessage msg )
             {
-                Envelope reply = new Envelope()
+                Reply( msg, null );
+            }
+
+            public void Reply( IMessage msg, ReplyOptions options )
+            {
+                Envelope replyEnv = new Envelope()
                 {
                     Message = msg,
                     CorrId = this.senderCorrId,
                 };
 
+                if( options?.RedirectReplies == true )
+                {
+                    replyEnv.SendRepliesTo = this.parent.privateQueueName;
+                }
+
                 if( this.senderReplyTo == null )
                 {
-                    this.parent.SendMessage( reply );
+                    this.parent.SendMessage( replyEnv );
                 }
                 else
                 {
-                    this.parent.SendMessage( reply, "", this.senderReplyTo );
+                    this.parent.SendMessage( replyEnv, "", this.senderReplyTo );
                 }
             }
         }
     }
+
 }

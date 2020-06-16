@@ -48,6 +48,7 @@
     <Compile Include="MessageDefRegistry.cs" />
     <Compile Include="MsgNameAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReplyOptions.cs" />
     <Compile Include="Serializer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
