@@ -57,6 +57,7 @@ namespace Demo
                     Password = "guest",
                     VirtualHost = "sdv-test",
                     AutomaticRecoveryEnabled = true,
+                    RequestedHeartbeat = TimeSpan.FromSeconds( 60 ),
                 };
             }
 
