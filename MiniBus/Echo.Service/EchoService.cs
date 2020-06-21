@@ -19,7 +19,7 @@ namespace Echo.Service
         {
             this.bus = bus;
 
-            this.bus.RegisterHandler<EchoRequest>( HandleEchoRequest );
+            this.bus.RegisterHandler<EchoRequest>( HandleEchoRequest, "voren.echo" );
         }
 
         private void HandleEchoRequest( IConsumeContext consumeContext, EchoRequest request )

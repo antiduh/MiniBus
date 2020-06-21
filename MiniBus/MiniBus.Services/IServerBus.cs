@@ -6,7 +6,7 @@ namespace MiniBus.Services
     {
         void SendMessage( Envelope msg );
 
-        void RegisterHandler<T>( Action<IConsumeContext, T> handler ) where T : IMessage, new();
+        void RegisterHandler<T>( Action<IConsumeContext, T> handler, string queueName ) where T : IMessage, new();
 
         //void UnregisterHandler<T>();
     }
