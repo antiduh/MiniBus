@@ -40,7 +40,7 @@ namespace Demo
         {
             MessageDef msgDef = this.msgReg.Get( envelope.Message );
 
-            SendMessageInternal( envelope, msgDef, msgDef.Exchange, msgDef.RoutingKey );
+            SendMessageInternal( envelope, msgDef, msgDef.Exchange, msgDef.Name );
         }
 
         public void SendMessage( Envelope envelope, string exchange, string routingKey )

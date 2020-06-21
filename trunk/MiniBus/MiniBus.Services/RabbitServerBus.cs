@@ -31,11 +31,11 @@ namespace MiniBus.Services
             this.rabbitConsumer.Received += DispatchReceivedRabbitMsg;
         }
 
-        public void RegisterHandler<T>( Action<IConsumeContext, T> handler ) where T : IMessage, new()
+        public void RegisterHandler<T>( Action<IConsumeContext, T> handler, string queueName ) where T : IMessage, new()
         {
             MessageDef def = this.msgReg.Get<T>();
 
-            ProvisionRabbit( def );
+            ProvisionRabbit( def, queueName );
 
             this.handlers.Add( def.Name, new RegistrationContainer<T>( this, handler ) );
         }
@@ -71,7 +71,7 @@ namespace MiniBus.Services
 
             if( routingKey == null )
             {
-                routingKey = msgDef.RoutingKey;
+                routingKey = msgDef.Name;
             }
 
             ReadOnlyMemory<byte> body = Serializer.MakeBody( msgDef, envelope.Message );
@@ -95,7 +95,7 @@ namespace MiniBus.Services
             }
         }
 
-        private void ProvisionRabbit( MessageDef msgDef )
+        private void ProvisionRabbit( MessageDef msgDef, string queueName )
         {
             // Note that it's OK to tell rabbit to declare an exchange that already exists; that's
             // not what this method tries to prevent. The purpose here is to prevent us from wasting
@@ -108,19 +108,19 @@ namespace MiniBus.Services
 
             // Declare and listen on the well-known queue.
             this.channel.QueueDeclare(
-                queue: msgDef.Queue,
+                queue: queueName,
                 durable: true,
                 exclusive: false,
                 autoDelete: false
             );
 
             this.channel.QueueBind(
-                msgDef.Queue,
+                queueName,
                 msgDef.Exchange,
-                msgDef.RoutingKey
+                msgDef.Name
             );
 
-            this.channel.BasicConsume( msgDef.Queue, true, this.rabbitConsumer );
+            this.channel.BasicConsume( queueName, true, this.rabbitConsumer );
 
             // Listen on a queue that's specific to this service instance.
             this.privateQueueName = this.channel.QueueDeclare().QueueName;
