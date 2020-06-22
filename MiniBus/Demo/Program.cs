@@ -21,18 +21,18 @@ namespace Demo
                 var service = new EchoService( 0 );
                 service.Connect( new RabbitServerBus( conn.Connect() ) );
 
-                var service2 = new EchoService( 1 );
-                service2.Connect( new RabbitServerBus( conn.Connect() ) );
-
+                //var service2 = new EchoService( 1 );
+                //service2.Connect( new RabbitServerBus( conn.Connect() ) );
 
                 var client1 = new EchoClient( new RabbitClientBus( conn.Connect() ) );
+                client1.CallOfTheVoid += x => Console.WriteLine( "Event: " + x );
 
                 Console.WriteLine( "Demo starting." );
 
                 for( int i = 0; i < 60; i++ )
                 {
                     Thread.Sleep( 1000 );
-                    client1.DoMultiEcho( "Hello" );
+                    //client1.DoEcho( "Hello" );
                 }
             }
 
