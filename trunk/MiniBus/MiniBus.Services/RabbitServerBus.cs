@@ -91,7 +91,7 @@ namespace MiniBus.Services
             }
             else
             {
-                Console.WriteLine( $"Failure: No handler registered for message: {msgName}." );
+                Console.WriteLine( $"Server Failure: No handler registered for message: {msgName}." );
             }
         }
 

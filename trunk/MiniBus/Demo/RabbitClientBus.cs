@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Configuration;
 using MiniBus;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -10,18 +11,23 @@ namespace Demo
     public class RabbitClientBus : IClientBus
     {
         private readonly IModel channel;
+        private readonly HashSet<string> knownExchanges;
         private EventingBasicConsumer rabbitConsumer;
         private string privateQueueName;
-
-        private Dictionary<Guid, RabbitRequestContext> pendingConversations;
 
         private MessageDefRegistry msgReg;
 
         private Dictionary<string, IMsgReader> msgReaders;
 
+        private Dictionary<Guid, RabbitRequestContext> pendingConversations;
+        private readonly Dictionary<string, IEventRegistration> eventHandlers;
+
         public RabbitClientBus( IModel channel )
         {
             this.channel = channel;
+
+            this.knownExchanges = new HashSet<string>();
+            this.eventHandlers = new Dictionary<string, IEventRegistration>();
 
             this.pendingConversations = new Dictionary<Guid, RabbitRequestContext>();
             this.msgReg = new MessageDefRegistry();
@@ -48,6 +54,26 @@ namespace Demo
             MessageDef msgDef = this.msgReg.Get( envelope.Message );
 
             SendMessageInternal( envelope, msgDef, exchange, routingKey );
+        }
+
+        public void EventHandler<T>( Action<T> handler ) where T : IMessage, new()
+        {
+            MessageDef msgDef = this.msgReg.Get<T>();
+
+            this.msgReaders.Add( msgDef.Name, new MsgReader<T>() );
+
+            // - Make sure the exchange exists
+            // - Bind the routing key to our private queue.
+
+            this.eventHandlers.Add( msgDef.Name, new EventRegistration<T>( this, handler ) );
+
+            if( knownExchanges.Contains( msgDef.Exchange ) == false )
+            {
+                this.channel.ExchangeDeclare( msgDef.Exchange, msgDef.ExchangeType.ToText(), true, false );
+                this.knownExchanges.Add( msgDef.Exchange );
+            }
+
+            this.channel.QueueBind( this.privateQueueName, msgDef.Exchange, msgDef.Name );
         }
 
         public void KnownMessage<T>() where T : IMessage, new()
@@ -89,33 +115,63 @@ namespace Demo
 
         private void DispatchReceivedRabbitMsg( object sender, BasicDeliverEventArgs e )
         {
-            RabbitRequestContext requestContext;
+            string msgName;
+            string payload;
+            Serializer.ReadBody( e.Body.ToArray(), out msgName, out payload );
 
-            if( e.BasicProperties.CorrelationId != null &&
-                this.pendingConversations.TryGetValue( new Guid( e.BasicProperties.CorrelationId ), out requestContext ) )
+            if( this.msgReaders.ContainsKey( msgName ) == false )
             {
-                string msgName;
-                string payload;
-                Serializer.ReadBody( e.Body.ToArray(), out msgName, out payload );
-
-                if( this.msgReaders.ContainsKey( msgName ) == false )
-                {
-                    throw new InvalidOperationException(
-                        $"Failed to deserialize unknown message '{msgName}'."
-                    );
-                }
-
-                IMessage msg = this.msgReaders[msgName].Read( payload );
-
-                Envelope env = new Envelope()
-                {
-                    CorrId = e.BasicProperties.CorrelationId,
-                    SendRepliesTo = e.BasicProperties.ReplyTo,
-                    Message = msg
-                };
-
-                requestContext.DispatchMessage( env );
+                throw new InvalidOperationException(
+                    $"Failed to deserialize unknown message '{msgName}'."
+                );
             }
+
+            IMessage msg = this.msgReaders[msgName].Read( payload );
+
+            Envelope env = new Envelope()
+            {
+                CorrId = e.BasicProperties.CorrelationId,
+                SendRepliesTo = e.BasicProperties.ReplyTo,
+                Message = msg
+            };
+
+
+            if( TryDispatchConversation( e, env ) == false &&
+                TryDispatchEvent( msgName, payload ) == false )
+            {
+                Console.WriteLine( $"Client Failure: No handler registered for message {msgName}." );
+            }
+        }
+
+        private bool TryDispatchEvent( string msgName, string payload )
+        {
+            bool result = false;
+
+            if( this.eventHandlers.TryGetValue( msgName, out IEventRegistration eventReg ) )
+            {
+                eventReg.Deliver( payload );
+                result = true;
+            }
+
+            return result;
+        }
+
+        private bool TryDispatchConversation( BasicDeliverEventArgs e, Envelope env )
+        {
+            bool result = false;
+
+            if( e.BasicProperties.CorrelationId != null )
+            {
+                Guid convo = new Guid( e.BasicProperties.CorrelationId );
+
+                if( this.pendingConversations.TryGetValue( convo, out RabbitRequestContext requestContext ) )
+                {
+                    requestContext.DispatchMessage( env );
+                    result = true;
+                }
+            }
+         
+            return result;
         }
 
         private interface IMsgReader
@@ -137,6 +193,32 @@ namespace Demo
             }
         }
 
+        private interface IEventRegistration
+        {
+            void Deliver( string payload );
+        }
+
+        private class EventRegistration<T> : IEventRegistration where T : IMessage, new()
+        {
+            private readonly RabbitClientBus parent;
+            private readonly Action<T> handler;
+
+            public EventRegistration( RabbitClientBus parent, Action<T> handler )
+            {
+                this.parent = parent;
+                this.handler = handler;
+            }
+
+            public void Deliver( string payload )
+            {
+                T msg = new T();
+                msg.Read( payload );
+
+                this.handler.Invoke( msg );
+            }
+        }
+
+        // TODO rename or synchronize usage with variable names (pendingConversations).
         private class RabbitRequestContext : IRequestContext
         {
             private readonly RabbitClientBus bus;

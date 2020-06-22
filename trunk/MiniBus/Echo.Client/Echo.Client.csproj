@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EchoClient.cs" />
+    <Compile Include="Messages\CallingVoidEvent.cs" />
     <Compile Include="Messages\EchoReply.cs" />
     <Compile Include="Messages\EchoRequest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
