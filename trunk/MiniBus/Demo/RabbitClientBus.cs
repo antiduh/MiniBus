@@ -132,28 +132,27 @@ namespace Demo
             {
                 CorrId = e.BasicProperties.CorrelationId,
                 SendRepliesTo = e.BasicProperties.ReplyTo,
-                Message = msg
             };
 
 
-            if( TryDispatchConversation( e, env ) == false &&
-                TryDispatchEvent( msgName, payload ) == false )
+            if( TryDispatchConversation( env, msg ) == false &&
+                TryDispatchEvent( msgName, msg ) == false )
             {
                 Console.WriteLine( $"Client Failure: No handler registered for message {msgName}." );
             }
         }
 
-        private bool TryDispatchConversation( BasicDeliverEventArgs e, Envelope env )
+        private bool TryDispatchConversation( Envelope env, IMessage msg )
         {
             bool result = false;
 
-            if( e.BasicProperties.CorrelationId != null )
+            if( env.CorrId != null )
             {
-                Guid convo = new Guid( e.BasicProperties.CorrelationId );
+                Guid convo = new Guid( env.CorrId );
 
                 if( this.pendingConversations.TryGetValue( convo, out RabbitRequestContext requestContext ) )
                 {
-                    requestContext.DispatchMessage( env );
+                    requestContext.DispatchMessage( env, msg );
                     result = true;
                 }
             }
@@ -161,13 +160,13 @@ namespace Demo
             return result;
         }
 
-        private bool TryDispatchEvent( string msgName, string payload )
+        private bool TryDispatchEvent( string msgName, IMessage msg )
         {
             bool result = false;
 
             if( this.eventHandlers.TryGetValue( msgName, out IEventRegistration eventReg ) )
             {
-                eventReg.Deliver( payload );
+                eventReg.Deliver( msg );
                 result = true;
             }
 
@@ -195,7 +194,7 @@ namespace Demo
 
         private interface IEventRegistration
         {
-            void Deliver( string payload );
+            void Deliver( IMessage rawMsg );
         }
 
         private class EventRegistration<T> : IEventRegistration where T : IMessage, new()
@@ -209,12 +208,9 @@ namespace Demo
                 this.handler = handler;
             }
 
-            public void Deliver( string payload )
+            public void Deliver( IMessage rawMsg )
             {
-                T msg = new T();
-                msg.Read( payload );
-
-                this.handler.Invoke( msg );
+                this.handler.Invoke( (T)rawMsg );
             }
         }
 
@@ -222,7 +218,7 @@ namespace Demo
         private class RabbitRequestContext : IRequestContext
         {
             private readonly RabbitClientBus bus;
-            private BlockingCollection<Envelope> inQueue;
+            private BlockingCollection<Dispatch> inQueue;
 
             private bool haveRedirect;
             private string redirectQueue;
@@ -235,7 +231,7 @@ namespace Demo
 
                 this.ConversationId = Guid.NewGuid();
 
-                this.inQueue = new BlockingCollection<Envelope>();
+                this.inQueue = new BlockingCollection<Dispatch>();
 
                 this.haveRedirect = false;
                 this.redirectQueue = null;
@@ -264,47 +260,60 @@ namespace Demo
 
             public IMessage WaitResponse( TimeSpan timeout )
             {
-                return WaitResponseInternal( timeout ).Message;
+                return WaitResponseInternal( timeout );
             }
 
             public T WaitResponse<T>( TimeSpan timeout ) where T : IMessage
             {
-                Envelope envelope = WaitResponseInternal( timeout );
+                IMessage msg = WaitResponseInternal( timeout );
 
-                if( envelope.Message is T casted )
+                if( msg is T casted )
                 {
                     return casted;
                 }
                 else
                 {
                     throw new InvalidOperationException(
-                        $"Received unexpected message '{envelope.Message.GetType()}'."
+                        $"Received unexpected message '{msg.GetType()}'."
                     );
                 }
             }
 
-            public void DispatchMessage( Envelope env )
+            public void DispatchMessage( Envelope env, IMessage msg )
             {
-                this.inQueue.Add( env );
+                this.inQueue.Add( new Dispatch( env, msg ) );
             }
 
-            private Envelope WaitResponseInternal( TimeSpan timeout )
+            private IMessage WaitResponseInternal( TimeSpan timeout )
             {
-                Envelope env;
+                Dispatch dispatch;
 
-                if( this.inQueue.TryTake( out env, timeout ) == false )
+                if( this.inQueue.TryTake( out dispatch, timeout ) == false )
                 {
                     throw new TimeoutException();
                 }
 
-                if( env.SendRepliesTo != null )
+                if( dispatch.Envelope.SendRepliesTo != null )
                 {
                     // The reply sent us a redirect to a private queue.
                     this.haveRedirect = true;
-                    this.redirectQueue = env.SendRepliesTo;
+                    this.redirectQueue = dispatch.Envelope.SendRepliesTo;
                 }
 
-                return env;
+                return dispatch.Message;
+            }
+
+            private struct Dispatch
+            {
+                public Dispatch( Envelope envelope, IMessage message )
+                {
+                    Envelope = envelope;
+                    Message = message;
+                }
+
+                public Envelope Envelope { get; private set; }
+
+                public IMessage Message { get; private set; }
             }
         }
     }
