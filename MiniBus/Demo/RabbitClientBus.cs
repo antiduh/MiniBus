@@ -115,18 +115,21 @@ namespace Demo
 
         private void DispatchReceivedRabbitMsg( object sender, BasicDeliverEventArgs e )
         {
+            IMsgReader reader;
+            IMessage msg;
             string msgName;
             string payload;
+
             Serializer.ReadBody( e.Body.ToArray(), out msgName, out payload );
 
-            if( this.msgReaders.ContainsKey( msgName ) == false )
+            if( this.msgReaders.TryGetValue( msgName, out reader ) == false )
             {
                 throw new InvalidOperationException(
                     $"Failed to deserialize unknown message '{msgName}'."
                 );
             }
-
-            IMessage msg = this.msgReaders[msgName].Read( payload );
+            
+            msg = reader.Read( payload );
 
             Envelope env = new Envelope()
             {
