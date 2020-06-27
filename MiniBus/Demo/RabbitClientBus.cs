@@ -143,19 +143,6 @@ namespace Demo
             }
         }
 
-        private bool TryDispatchEvent( string msgName, string payload )
-        {
-            bool result = false;
-
-            if( this.eventHandlers.TryGetValue( msgName, out IEventRegistration eventReg ) )
-            {
-                eventReg.Deliver( payload );
-                result = true;
-            }
-
-            return result;
-        }
-
         private bool TryDispatchConversation( BasicDeliverEventArgs e, Envelope env )
         {
             bool result = false;
@@ -171,6 +158,19 @@ namespace Demo
                 }
             }
          
+            return result;
+        }
+
+        private bool TryDispatchEvent( string msgName, string payload )
+        {
+            bool result = false;
+
+            if( this.eventHandlers.TryGetValue( msgName, out IEventRegistration eventReg ) )
+            {
+                eventReg.Deliver( payload );
+                result = true;
+            }
+
             return result;
         }
 
