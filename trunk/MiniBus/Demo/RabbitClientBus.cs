@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Configuration;
 using MiniBus;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -40,7 +39,6 @@ namespace Demo
             this.privateQueueName = this.channel.QueueDeclare().QueueName;
             this.channel.BasicConsume( this.privateQueueName, true, this.rabbitConsumer );
         }
-
 
         public void SendMessage( Envelope envelope )
         {
@@ -128,7 +126,7 @@ namespace Demo
                     $"Failed to deserialize unknown message '{msgName}'."
                 );
             }
-            
+
             msg = reader.Read( payload );
 
             Envelope env = new Envelope()
@@ -136,7 +134,6 @@ namespace Demo
                 CorrId = e.BasicProperties.CorrelationId,
                 SendRepliesTo = e.BasicProperties.ReplyTo,
             };
-
 
             if( TryDispatchConversation( env, msg ) == false &&
                 TryDispatchEvent( msgName, msg ) == false )
@@ -159,7 +156,7 @@ namespace Demo
                     result = true;
                 }
             }
-         
+
             return result;
         }
 
