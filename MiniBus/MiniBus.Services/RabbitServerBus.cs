@@ -31,7 +31,7 @@ namespace MiniBus.Services
             this.rabbitConsumer.Received += DispatchReceivedRabbitMsg;
         }
 
-        public void RegisterHandler<T>( Action<IConsumeContext, T> handler, string queueName ) where T : IMessage, new()
+        public void RegisterHandler<T>( Action<T, IConsumeContext> handler, string queueName ) where T : IMessage, new()
         {
             MessageDef def = this.msgReg.Get<T>();
 
@@ -138,9 +138,9 @@ namespace MiniBus.Services
         private class RegistrationContainer<T> : IRegistrationContainer where T : IMessage, new()
         {
             private readonly RabbitServerBus parent;
-            private readonly Action<IConsumeContext, T> handler;
+            private readonly Action<T, IConsumeContext> handler;
 
-            public RegistrationContainer( RabbitServerBus parent, Action<IConsumeContext, T> handler )
+            public RegistrationContainer( RabbitServerBus parent, Action<T, IConsumeContext> handler )
             {
                 this.parent = parent;
                 this.handler = handler;
@@ -153,7 +153,7 @@ namespace MiniBus.Services
 
                 var consumeContext = new RabbitConsumeContext( this.parent, senderCorrId, senderReplyTo );
 
-                this.handler.Invoke( consumeContext, msg );
+                this.handler.Invoke( msg, consumeContext );
             }
         }
 
