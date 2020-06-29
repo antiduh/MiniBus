@@ -32,7 +32,7 @@ namespace Demo
                 for( int i = 0; i < 60; i++ )
                 {
                     Thread.Sleep( 1000 );
-                    //client1.DoEcho( "Hello" );
+                    client1.DoEcho( "Hello" );
                 }
             }
 
