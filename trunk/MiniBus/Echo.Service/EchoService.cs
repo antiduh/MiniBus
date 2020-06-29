@@ -29,7 +29,7 @@ namespace Echo.Service
             this.voidCallingTimer.Change( TimeSpan.FromSeconds( 2 ), TimeSpan.FromSeconds( 2 ) );
         }
                 
-        private void HandleEchoRequest( IConsumeContext consumeContext, EchoRequest request )
+        private void HandleEchoRequest( EchoRequest request, IConsumeContext consumeContext )
         {
             Console.WriteLine( $"Service {index} handling echo request." );
 
