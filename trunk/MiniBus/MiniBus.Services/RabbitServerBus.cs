@@ -74,14 +74,17 @@ namespace MiniBus.Services
                 routingKey = msgDef.Name;
             }
 
-            ReadOnlyMemory<byte> body = Serializer.MakeBody( msgDef, envelope.Message );
+            props.MessageId = msgDef.Name;
+
+            ReadOnlyMemory<byte> body = Serializer.MakeBody( envelope.Message );
             this.channel.BasicPublish( exchange, routingKey, props, body );
         }
 
         private void DispatchReceivedRabbitMsg( object sender, BasicDeliverEventArgs e )
         {
-            string msgName, payload;
-            Serializer.ReadBody( e.Body.ToArray(), out msgName, out payload );
+            string msgName = e.BasicProperties.MessageId;
+            
+            string payload = Serializer.ReadBody( e.Body.ToArray() );
 
             IRegistrationContainer handler;
 

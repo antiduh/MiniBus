@@ -107,7 +107,9 @@ namespace Demo
                 props.ReplyTo = envelope.SendRepliesTo;
             }
 
-            ReadOnlyMemory<byte> body = Serializer.MakeBody( msgDef, envelope.Message );
+            props.MessageId = msgDef.Name;
+
+            ReadOnlyMemory<byte> body = Serializer.MakeBody( envelope.Message );
             this.channel.BasicPublish( exchange, routingKey, props, body );
         }
 
@@ -115,10 +117,9 @@ namespace Demo
         {
             IMsgReader reader;
             IMessage msg;
-            string msgName;
-            string payload;
 
-            Serializer.ReadBody( e.Body.ToArray(), out msgName, out payload );
+            string msgName = e.BasicProperties.MessageId;
+            string payload = Serializer.ReadBody( e.Body.ToArray() );
 
             if( this.msgReaders.TryGetValue( msgName, out reader ) == false )
             {
@@ -134,7 +135,7 @@ namespace Demo
                 CorrId = e.BasicProperties.CorrelationId,
                 SendRepliesTo = e.BasicProperties.ReplyTo,
             };
-
+           
             if( TryDispatchConversation( env, msg ) == false &&
                 TryDispatchEvent( msgName, msg ) == false )
             {
