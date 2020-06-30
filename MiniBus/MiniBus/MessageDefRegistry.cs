@@ -28,15 +28,18 @@ namespace MiniBus
 
         private MessageDef AddFromType( Type type )
         {
-            if( this.messageMap.ContainsKey( type ) == false )
+            MessageDef def;
+
+            if( this.messageMap.TryGetValue( type, out def ) == false )
             {
                 var msgName = type.GetCustomAttribute<MsgNameAttribute>( false );
                 var exchangeDef = type.GetCustomAttribute<ExchangeAttribute>( false );
 
-                this.messageMap[type] = new MessageDef( exchangeDef, msgName );
+                def = new MessageDef( exchangeDef, msgName );
+                this.messageMap[type] = def;
             }
 
-            return this.messageMap[type];
+            return def;
         }
     }
 }
