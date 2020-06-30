@@ -14,7 +14,7 @@ namespace Demo
         private EventingBasicConsumer rabbitConsumer;
         private string privateQueueName;
 
-        private MessageDefRegistry msgReg;
+        private MsgDefRegistry msgReg;
 
         private Dictionary<string, IMsgReader> msgReaders;
 
@@ -29,7 +29,7 @@ namespace Demo
             this.eventHandlers = new Dictionary<string, IEventRegistration>();
 
             this.pendingConversations = new Dictionary<Guid, RabbitRequestContext>();
-            this.msgReg = new MessageDefRegistry();
+            this.msgReg = new MsgDefRegistry();
             this.msgReaders = new Dictionary<string, IMsgReader>();
 
             this.rabbitConsumer = new EventingBasicConsumer( this.channel );

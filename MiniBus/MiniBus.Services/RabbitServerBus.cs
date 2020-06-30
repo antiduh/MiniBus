@@ -17,7 +17,7 @@ namespace MiniBus.Services
 
         private string privateQueueName;
 
-        private MessageDefRegistry msgReg;
+        private MsgDefRegistry msgReg;
 
         public RabbitServerBus( IModel rabbit )
         {
@@ -25,7 +25,7 @@ namespace MiniBus.Services
 
             this.knownExchanges = new HashSet<string>();
             this.handlers = new Dictionary<string, IRegistrationContainer>();
-            this.msgReg = new MessageDefRegistry();
+            this.msgReg = new MsgDefRegistry();
 
             this.rabbitConsumer = new EventingBasicConsumer( rabbit );
             this.rabbitConsumer.Received += DispatchReceivedRabbitMsg;
