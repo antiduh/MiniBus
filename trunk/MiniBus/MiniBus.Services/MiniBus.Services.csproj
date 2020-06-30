@@ -56,6 +56,7 @@
   <ItemGroup>
     <Compile Include="IServerBus.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RabbitClientBus.cs" />
     <Compile Include="RabbitServerBus.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -5,7 +5,7 @@ using MiniBus;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace Demo
+namespace MiniBus.Services
 {
     public class RabbitClientBus : IClientBus
     {
