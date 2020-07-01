@@ -9,8 +9,12 @@ namespace MiniBus
     /// </summary>
     /// <remarks>
     /// Message definitions are used by both clients and services to define how messages are to be
-    /// exchanged through RabbitMQ, so a message definition is delcared on the message type itself
-    /// using attributes. This class performs and caches the reflection work to read the attributes.
+    /// exchanged through RabbitMQ. Since clients and services need to agree on how to exchange
+    /// messages, the routing specifics are defined directly on the message class itself using <see
+    /// cref="MsgNameAttribute"/> attributes.
+    ///
+    /// This class handles performing the reflection as needed, and caching the reflection result
+    /// for performance.
     /// </remarks>
     public class MsgDefRegistry
     {
