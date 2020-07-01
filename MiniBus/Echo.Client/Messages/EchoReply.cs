@@ -2,8 +2,7 @@
 
 namespace Echo.Client.Messages
 {
-    [MsgName( "voren.echo.EchoReply" )]
-    [Exchange( ExchangeType.Topic, "voren-core" )]
+    [MsgName( "voren.echo.EchoReply", "voren-core" )]
     public class EchoReply : IMessage
     {
         public EchoReply() { }

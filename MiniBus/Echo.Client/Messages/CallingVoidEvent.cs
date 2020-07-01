@@ -6,8 +6,7 @@ namespace Echo.Client.Messages
     /// <summary>
     /// Occurs when the void calls out to you, instead of you calling out to the void.
     /// </summary>
-    [MsgName( "voren.echo.CallingVoid" )]
-    [Exchange( ExchangeType.Topic, "voren-core" )]
+    [MsgName( "voren.echo.CallingVoid", "voren-core" )]
     public class CallingVoidEvent : IMessage
     {
         public CallingVoidEvent() { }

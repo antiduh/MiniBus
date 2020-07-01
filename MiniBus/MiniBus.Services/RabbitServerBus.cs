@@ -105,7 +105,7 @@ namespace MiniBus.Services
             // time doing it again and again.
             if( knownExchanges.Contains( msgDef.Exchange ) == false )
             {
-                this.channel.ExchangeDeclare( msgDef.Exchange, msgDef.ExchangeType.ToText(), true, false );
+                this.channel.ExchangeDeclare( msgDef.Exchange, "topic", true, false );
                 this.knownExchanges.Add( msgDef.Exchange );
             }
 
