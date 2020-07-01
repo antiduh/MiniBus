@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Threading;
 using System.Windows.Forms;
 using Echo.Client;
@@ -15,6 +16,11 @@ namespace Demo
         /// </summary>
         [STAThread]
         private static void Main()
+        {
+            RunDemo();
+        }
+
+        private static void RunDemo()
         {
             using( var conn = new RabbitConn() )
             {
