@@ -2,18 +2,14 @@
 {
     public class MessageDef
     {
-        public MessageDef( ExchangeAttribute exchangeInfo, MsgNameAttribute msgInfo )
+        public MessageDef( string name, string exchange )
         {
-            this.Exchange = exchangeInfo.Exchange;
-            this.ExchangeType = exchangeInfo.Type;
-
-            this.Name = msgInfo.Name;
+            this.Name = name;
+            this.Exchange = exchange;
         }
 
-        public string Exchange { get; private set; }
-
-        public ExchangeType ExchangeType { get; }
-
         public string Name { get; private set; }
+
+        public string Exchange { get; private set; }
     }
 }

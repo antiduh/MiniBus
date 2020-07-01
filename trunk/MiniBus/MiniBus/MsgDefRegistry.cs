@@ -57,9 +57,8 @@ namespace MiniBus
             if( this.messageMap.TryGetValue( type, out def ) == false )
             {
                 var msgName = type.GetCustomAttribute<MsgNameAttribute>( false );
-                var exchangeDef = type.GetCustomAttribute<ExchangeAttribute>( false );
 
-                def = new MessageDef( exchangeDef, msgName );
+                def = new MessageDef( msgName.Name, msgName.Exchange );
                 this.messageMap[type] = def;
             }
 

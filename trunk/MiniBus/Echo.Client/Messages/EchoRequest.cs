@@ -2,8 +2,7 @@
 
 namespace Echo.Client.Messages
 {
-    [MsgName( "voren.echo.EchoRequest" )]
-    [Exchange( ExchangeType.Topic, "voren-core" )]
+    [MsgName( "voren.echo.EchoRequest", "voren-core" )]
     public class EchoRequest : IMessage
     {
         public EchoRequest()
