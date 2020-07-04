@@ -74,7 +74,7 @@ namespace MiniBus.Services
             this.channel.QueueBind( this.privateQueueName, msgDef.Exchange, msgDef.Name );
         }
 
-        public void KnownMessage<T>() where T : IMessage, new()
+        public void DeclareMessage<T>() where T : IMessage, new()
         {
             MessageDef msgDef = this.msgReg.Get<T>();
 
