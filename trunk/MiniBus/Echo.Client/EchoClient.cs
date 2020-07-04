@@ -11,7 +11,7 @@ namespace Echo.Client
         public EchoClient( IClientBus bus )
         {
             this.bus = bus;
-            this.bus.KnownMessage<EchoReply>();
+            this.bus.DeclareMessage<EchoReply>();
             this.bus.EventHandler<CallingVoidEvent>( HandleCallingVoid );
         }
 
