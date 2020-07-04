@@ -20,7 +20,7 @@ namespace Echo.Client
         public void DoEcho( string text )
         {
             var request = this.bus.StartRequest();
-            request.SendMessage( new EchoRequest( text ) );
+            request.SendRequest( new EchoRequest( text ) );
 
             var response = request.WaitResponse<EchoReply>( TimeSpan.FromSeconds( 5.0 ) );
 
@@ -36,7 +36,7 @@ namespace Echo.Client
 
             for( int i = 0; i < 5; i++ )
             {
-                request.SendMessage( new EchoRequest( text ) );
+                request.SendRequest( new EchoRequest( text ) );
                 var response = request.WaitResponse<EchoReply>( TimeSpan.FromSeconds( 5.0 ) );
 
                 if( response.EchoMsg != text )
