@@ -15,7 +15,7 @@ namespace MiniBus
 
     public interface IRequestContext
     {
-        void SendMessage( IMessage msg );
+        void SendRequest( IMessage msg );
 
         IMessage WaitResponse( TimeSpan timeout );
 

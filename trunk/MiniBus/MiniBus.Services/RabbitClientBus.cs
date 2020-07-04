@@ -240,7 +240,7 @@ namespace MiniBus.Services
 
             public Guid ConversationId { get; private set; }
 
-            public void SendMessage( IMessage msg )
+            public void SendRequest( IMessage msg )
             {
                 Envelope env = new Envelope()
                 {
