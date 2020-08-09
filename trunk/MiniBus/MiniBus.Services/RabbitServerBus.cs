@@ -29,6 +29,7 @@ namespace MiniBus.Services
 
             this.rabbitConsumer = new EventingBasicConsumer( rabbit );
             this.rabbitConsumer.Received += DispatchReceivedRabbitMsg;
+            this.rabbitConsumer.Shutdown += RabbitConsumer_Shutdown;
         }
 
         public void RegisterHandler<T>( Action<T, IConsumeContext> handler, string queueName ) where T : IMessage, new()
@@ -128,6 +129,11 @@ namespace MiniBus.Services
             // Listen on a queue that's specific to this service instance.
             this.privateQueueName = this.channel.QueueDeclare().QueueName;
             this.channel.BasicConsume( this.privateQueueName, true, this.rabbitConsumer );
+        }
+
+        private void RabbitConsumer_Shutdown( object sender, ShutdownEventArgs e )
+        {
+            Console.WriteLine( $"ServerBus: Consumer shutdown." );
         }
 
         private interface IRegistrationContainer
