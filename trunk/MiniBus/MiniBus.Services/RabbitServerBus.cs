@@ -34,10 +34,10 @@ namespace MiniBus.Services
         public void RegisterHandler<T>( Action<T, IConsumeContext> handler, string queueName ) where T : IMessage, new()
         {
             MessageDef def = this.msgReg.Get<T>();
+         
+            this.handlers.Add( def.Name, new RegistrationContainer<T>( this, handler ) );
 
             ProvisionRabbit( def, queueName );
-
-            this.handlers.Add( def.Name, new RegistrationContainer<T>( this, handler ) );
         }
 
         public void SendMessage( Envelope envelope )
