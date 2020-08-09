@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Net;
+using System.Runtime.Remoting.Messaging;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Echo.Client;
 using Echo.Service;
@@ -31,7 +33,7 @@ namespace Demo
                 //service2.Connect( new RabbitServerBus( conn.Connect() ) );
 
                 var client1 = new EchoClient( new RabbitClientBus( conn.Connect() ) );
-                client1.CallOfTheVoid += x => Console.WriteLine( "Event: " + x );
+                client1.CallOfTheVoid += x => Console.WriteLine( $"Client: Event '{x}'" );
 
                 Console.WriteLine( "Demo starting." );
 

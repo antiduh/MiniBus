@@ -31,7 +31,7 @@ namespace Echo.Service
                 
         private void HandleEchoRequest( EchoRequest request, IConsumeContext consumeContext )
         {
-            Console.WriteLine( $"Service {index} handling echo request." );
+            Console.WriteLine( $"Service {index}: Echo request - '{request.EchoMsg}'." );
 
             var opts = new ReplyOptions() { RedirectReplies = true };
 
@@ -42,7 +42,7 @@ namespace Echo.Service
         {
             var env = new Envelope()
             {
-                Message = new CallingVoidEvent() { Message = "Hello." }
+                Message = new CallingVoidEvent() { Message = "Call of the Void" }
             };
 
             this.bus.SendMessage( env );
