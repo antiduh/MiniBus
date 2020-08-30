@@ -45,7 +45,14 @@ namespace Echo.Service
                 Message = new CallingVoidEvent() { Message = "Call of the Void" }
             };
 
-            this.bus.SendMessage( env );
+            try
+            {
+                this.bus.SendMessage( env );
+            }
+            catch( Exception e )
+            {
+                Console.WriteLine( $"Service {index} - failed to publish timer." );
+            }
         }
     }
 }
