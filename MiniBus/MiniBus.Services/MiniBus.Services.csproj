@@ -70,6 +70,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\TlvDemo\PocketTLV\PocketTLV.csproj">
+      <Project>{81B9793C-696F-4DE6-A045-86077DACF543}</Project>
+      <Name>PocketTLV</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MiniBus\MiniBus.csproj">
       <Project>{8f603284-f309-473b-ac8e-eb88f602aeb6}</Project>
       <Name>MiniBus</Name>
