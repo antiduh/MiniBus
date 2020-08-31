@@ -53,6 +53,7 @@
     <Compile Include="Messages\CallingVoidEvent.cs" />
     <Compile Include="Messages\EchoReply.cs" />
     <Compile Include="Messages\EchoRequest.cs" />
+    <Compile Include="Messages\EchoTlvs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

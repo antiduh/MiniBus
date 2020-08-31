@@ -155,7 +155,9 @@ namespace MiniBus.Services
             public void Deliver( string payload, string senderCorrId, string senderReplyTo )
             {
                 T msg = new T();
-                msg.Read( payload );
+
+                // TODO
+                //msg.Read( payload );
 
                 var consumeContext = new RabbitConsumeContext( this.parent, senderCorrId, senderReplyTo );
 

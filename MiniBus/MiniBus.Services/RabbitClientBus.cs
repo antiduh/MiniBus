@@ -187,7 +187,8 @@ namespace MiniBus.Services
             {
                 var msg = new T();
 
-                msg.Read( payload );
+                // TODO
+                //msg.Read( payload );
 
                 return msg;
             }

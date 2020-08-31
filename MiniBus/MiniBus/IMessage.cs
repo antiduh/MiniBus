@@ -1,9 +1,9 @@
-﻿namespace MiniBus
-{
-    public interface IMessage
-    {
-        void Read( string payload );
+﻿using PocketTLV;
 
-        string Write();
+namespace MiniBus
+{
+    public interface IMessage : ITlvContract
+    {
+       
     }
 }
