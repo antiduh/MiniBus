@@ -1,5 +1,8 @@
 ﻿using System;
+using ClientDemo.Messages;
 using MiniBus;
+using PocketTLV;
+using PocketTLV.Primitives;
 
 namespace Echo.Client.Messages
 {
@@ -18,14 +21,16 @@ namespace Echo.Client.Messages
 
         public string Message { get; set; }
 
-        void IMessage.Read( string payload )
+        int ITlvContract.ContractId => EchoTlvs.VoidCalling;
+
+        void ITlvContract.Parse( ITlvParseContext parseContext )
         {
-            this.Message = payload;
+            this.Message = parseContext.ParseTag<StringTag>( 0 );
         }
 
-        string IMessage.Write()
+        void ITlvContract.Save( ITlvSaveContext saveContext )
         {
-            return this.Message;
+            saveContext.Save( 0, new StringTag( this.Message ) );
         }
     }
 }
