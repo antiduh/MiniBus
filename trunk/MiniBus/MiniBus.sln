@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Echo.Service", "Echo.Servic
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo", "Demo\Demo.csproj", "{D5D191E3-FE02-4378-898A-A8D8DB34FA13}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gateway.Service", "Gateway.Service\Gateway.Service.csproj", "{2BCBC823-0B04-461E-BC02-467815E38C64}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PocketTLV", "..\TlvDemo\PocketTLV\PocketTLV.csproj", "{81B9793C-696F-4DE6-A045-86077DACF543}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{D5D191E3-FE02-4378-898A-A8D8DB34FA13}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D5D191E3-FE02-4378-898A-A8D8DB34FA13}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D5D191E3-FE02-4378-898A-A8D8DB34FA13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2BCBC823-0B04-461E-BC02-467815E38C64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BCBC823-0B04-461E-BC02-467815E38C64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BCBC823-0B04-461E-BC02-467815E38C64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BCBC823-0B04-461E-BC02-467815E38C64}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81B9793C-696F-4DE6-A045-86077DACF543}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81B9793C-696F-4DE6-A045-86077DACF543}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81B9793C-696F-4DE6-A045-86077DACF543}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81B9793C-696F-4DE6-A045-86077DACF543}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

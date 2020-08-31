@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Net;
+using System.Net.Sockets;
 using System.Runtime.Remoting.Messaging;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Echo.Client;
 using Echo.Service;
+using Gateway.Service;
+using MiniBus.ClientApi.Gateway;
 using MiniBus.Services;
+using PocketTLV;
+using PocketTLV.Primitives;
 using RabbitMQ.Client;
 
 namespace Demo
@@ -19,10 +24,52 @@ namespace Demo
         [STAThread]
         private static void Main()
         {
-            RunDemo();
+            //RabbitBusDemo();
+
+            TlvDemo();
         }
 
-        private static void RunDemo()
+        public class EchoRequestTag : ITlvContract
+        {
+            public string Text { get; set; }
+
+            public int ContractId => 1;
+
+            void ITlvContract.Parse( ITlvParseContext parseContext )
+            {
+                this.Text = parseContext.ParseTag<StringTag>( 0 );
+            }
+
+            void ITlvContract.Save( ITlvSaveContext saveContext )
+            {
+                saveContext.Save( 0, new StringTag( this.Text ) );
+            }
+        }
+
+        private static void TlvDemo()
+        {
+            var frame = new GatewayMessage()
+            {
+                Exchange = "voren-core",
+                RoutingKey = "voren.Echo",
+                MessageName = "EchoRequest",
+                //Guid = "123456",
+                Message = new EchoRequestTag() { Text = "Hello world." }
+            };
+
+            GatewayService service = new GatewayService( 10001 );
+            service.Start();
+
+            TcpClient client = new TcpClient( "127.0.0.1", 10001 );
+
+            TlvWriter writer = new TlvWriter( client.GetStream() );
+
+            writer.Write( frame );
+
+            Thread.Sleep( 10 * 1000 );
+        }
+
+        private static void RabbitBusDemo()
         {
             using( var conn = new RabbitConn() )
             {
@@ -39,7 +86,7 @@ namespace Demo
 
                 for( int i = 0; i < 60; i++ )
                 {
-                    Thread.Sleep( 1000 );
+                    Thread.Sleep( 500 );
                     client1.DoEcho( "Hello" );
                 }
             }
