@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using PocketTLV;
 using PocketTLV.Primitives;
 
-namespace MiniBus.ClientApi.Gateway
+namespace MiniBus.Gateway
 {
     public class GatewayMessage : ITlvContract
     {

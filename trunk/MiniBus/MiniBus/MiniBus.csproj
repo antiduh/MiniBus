@@ -38,7 +38,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataConverter.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="Gateway\GatewayMessage.cs" />
     <Compile Include="IConsumeContext.cs" />
@@ -46,7 +45,7 @@
     <Compile Include="IClientBus.cs" />
     <Compile Include="IMessage.cs" />
     <Compile Include="MessageDef.cs" />
-    <Compile Include="Gateway\TlvSocket.cs" />
+    <Compile Include="Gateway\TlvClient.cs" />
     <Compile Include="MsgDefRegistry.cs" />
     <Compile Include="MsgNameAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
