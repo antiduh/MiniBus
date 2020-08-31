@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using MiniBus;
-using MiniBus.ClientApi.Gateway;
+using MiniBus.Gateway;
 using MiniBus.Services;
 using PocketTLV;
 using RabbitMQ.Client;
@@ -28,7 +27,6 @@ namespace Gateway.Service
             this.port = port;
 
             this.clientMap = new Dictionary<Guid, GatewaySession>();
-
         }
 
         public void Start()
@@ -40,14 +38,12 @@ namespace Gateway.Service
         public void Connect( IModel channel )
         {
             this.channel = channel;
-           
-            
         }
 
         public void SocketToRabbit()
         {
             // To forward to rabbit, we need to know the message parameters.
-            // - What is the message name (routing key)? 
+            // - What is the message name (routing key)?
             // - What is the exchange it should be sent to?
             // - Does the message have a correlation ID?
             // - We have to tag the message on rabbit with our queue so that the bus replies to us.
@@ -79,16 +75,14 @@ namespace Gateway.Service
                     break;
                 }
             }
-
         }
-
 
         private class GatewaySession
         {
             private readonly TcpClient client;
             private readonly GatewayService parent;
 
-            private TlvSocket tlvSocket;
+            private TlvClient tlvSocket;
 
             public GatewaySession( TcpClient client, GatewayService parent )
             {
@@ -96,7 +90,7 @@ namespace Gateway.Service
                 this.parent = parent;
                 this.Guid = Guid.NewGuid();
 
-                this.tlvSocket = new TlvSocket( client.GetStream() );
+                this.tlvSocket = new TlvClient( client.GetStream() );
                 this.tlvSocket.Register<GatewayMessage>();
                 this.tlvSocket.Received += Socket_Received;
             }
@@ -124,8 +118,6 @@ namespace Gateway.Service
 
                 Console.WriteLine( msg.RoutingKey );
             }
-
         }
     }
-
 }

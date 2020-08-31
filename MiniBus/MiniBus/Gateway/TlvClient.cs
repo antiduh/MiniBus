@@ -4,12 +4,12 @@ using System.Net.Sockets;
 using System.Threading;
 using PocketTLV;
 
-namespace MiniBus
+namespace MiniBus.Gateway
 {
     /// <summary>
     /// Reads and writes Minibus messages from a stream.
     /// </summary>
-    public class TlvSocket
+    public class TlvClient
     {
         private readonly Stream client;
 
@@ -20,7 +20,7 @@ namespace MiniBus
 
         private bool started;
 
-        public TlvSocket( Stream client )
+        public TlvClient( Stream client )
         {
             this.client = client;
 
