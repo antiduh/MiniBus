@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Net;
 using System.Net.Sockets;
-using System.Runtime.Remoting.Messaging;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Echo.Client;
 using Echo.Service;
 using Gateway.Service;
-using MiniBus.ClientApi.Gateway;
+using MiniBus.Gateway;
 using MiniBus.Services;
 using PocketTLV;
 using PocketTLV.Primitives;
