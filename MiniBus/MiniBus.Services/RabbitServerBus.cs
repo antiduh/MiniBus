@@ -22,7 +22,7 @@ namespace MiniBus.Services
         private MsgDefRegistry msgReg;
 
         private MemoryStream tlvReaderStream;
-        private TlvReader tlvReader;
+        private TlvStreamReader tlvReader;
 
         public RabbitServerBus( IModel rabbit )
         {
@@ -34,7 +34,7 @@ namespace MiniBus.Services
 
             // TODO improve.
             this.tlvReaderStream = new MemoryStream();
-            this.tlvReader = new TlvReader( this.tlvReaderStream );
+            this.tlvReader = new TlvStreamReader( this.tlvReaderStream );
 
             this.rabbitConsumer = new EventingBasicConsumer( rabbit );
             this.rabbitConsumer.Received += DispatchReceivedRabbitMsg;
@@ -94,7 +94,7 @@ namespace MiniBus.Services
 
             // TODO improve efficiency.
             var stream = new MemoryStream();
-            var writer = new TlvWriter( stream );
+            var writer = new TlvStreamWriter( stream );
 
             writer.Write( envelope.Message );
 
