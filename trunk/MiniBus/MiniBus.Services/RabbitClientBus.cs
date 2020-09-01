@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using MiniBus;
+using PocketTLV;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -16,10 +18,11 @@ namespace MiniBus.Services
 
         private MsgDefRegistry msgReg;
 
-        private Dictionary<string, IMsgReader> msgReaders;
-
         private Dictionary<Guid, RabbitRequestContext> pendingConversations;
         private readonly Dictionary<string, IEventRegistration> eventHandlers;
+
+        private MemoryStream tlvStream;
+        private TlvReader tlvReader;
 
         public RabbitClientBus( IModel channel )
         {
@@ -30,7 +33,9 @@ namespace MiniBus.Services
 
             this.pendingConversations = new Dictionary<Guid, RabbitRequestContext>();
             this.msgReg = new MsgDefRegistry();
-            this.msgReaders = new Dictionary<string, IMsgReader>();
+
+            this.tlvStream = new MemoryStream();
+            this.tlvReader = new TlvReader( this.tlvStream );
 
             this.rabbitConsumer = new EventingBasicConsumer( this.channel );
             this.rabbitConsumer.Received += DispatchReceivedRabbitMsg;
@@ -58,7 +63,7 @@ namespace MiniBus.Services
         {
             MessageDef msgDef = this.msgReg.Get<T>();
 
-            this.msgReaders.Add( msgDef.Name, new MsgReader<T>() );
+            this.tlvReader.RegisterContract<T>();
 
             // - Make sure the exchange exists
             // - Bind the routing key to our private queue.
@@ -78,7 +83,7 @@ namespace MiniBus.Services
         {
             MessageDef msgDef = this.msgReg.Get<T>();
 
-            this.msgReaders.Add( msgDef.Name, new MsgReader<T>() );
+            this.tlvReader.RegisterContract<T>();
         }
 
         public IRequestContext StartRequest()
@@ -109,26 +114,28 @@ namespace MiniBus.Services
 
             props.MessageId = msgDef.Name;
 
-            ReadOnlyMemory<byte> body = Serializer.MakeBody( envelope.Message );
+            // TODO improve efficiency.
+            var stream = new MemoryStream();
+            var writer = new TlvWriter( stream );
+
+            writer.Write( envelope.Message );
+
+            ReadOnlyMemory<byte> body = stream.GetBuffer();
             this.channel.BasicPublish( exchange, routingKey, props, body );
         }
 
         private void DispatchReceivedRabbitMsg( object sender, BasicDeliverEventArgs e )
         {
-            IMsgReader reader;
             IMessage msg;
 
             string msgName = e.BasicProperties.MessageId;
-            string payload = Serializer.ReadBody( e.Body.ToArray() );
 
-            if( this.msgReaders.TryGetValue( msgName, out reader ) == false )
-            {
-                throw new InvalidOperationException(
-                    $"Failed to deserialize unknown message '{msgName}'."
-                );
-            }
+            byte[] body = e.Body.ToArray();
+            this.tlvStream.Position = 0L;
+            this.tlvStream.Write( body, 0, body.Length );
+            this.tlvStream.Position = 0L;
 
-            msg = reader.Read( payload );
+            msg = (IMessage)this.tlvReader.ReadContract();
 
             Envelope env = new Envelope()
             {
@@ -172,26 +179,6 @@ namespace MiniBus.Services
             }
 
             return result;
-        }
-
-        private interface IMsgReader
-        {
-            IMessage Read( string payload );
-        }
-
-        private class MsgReader<T>
-            : IMsgReader
-            where T : IMessage, new()
-        {
-            public IMessage Read( string payload )
-            {
-                var msg = new T();
-
-                // TODO
-                //msg.Read( payload );
-
-                return msg;
-            }
         }
 
         private interface IEventRegistration

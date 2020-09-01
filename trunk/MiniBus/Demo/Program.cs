@@ -21,9 +21,9 @@ namespace Demo
         [STAThread]
         private static void Main()
         {
-            //RabbitBusDemo();
+            RabbitBusDemo();
 
-            TlvDemo();
+            //TlvDemo();
         }
 
         public class EchoRequestTag : ITlvContract
@@ -83,7 +83,7 @@ namespace Demo
 
                 for( int i = 0; i < 60; i++ )
                 {
-                    Thread.Sleep( 500 );
+                    Thread.Sleep( 1000 );
                     client1.DoEcho( "Hello" );
                 }
             }
