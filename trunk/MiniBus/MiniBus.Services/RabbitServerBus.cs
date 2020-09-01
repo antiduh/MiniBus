@@ -111,6 +111,7 @@ namespace MiniBus.Services
                 byte[] body = e.Body.ToArray();
                 this.tlvReaderStream.Position = 0L;
                 this.tlvReaderStream.Write( body, 0, body.Length );
+                this.tlvReaderStream.Position = 0L;
 
                 IMessage msg = (IMessage)this.tlvReader.ReadContract();
 
