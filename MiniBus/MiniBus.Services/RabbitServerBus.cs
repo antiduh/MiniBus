@@ -108,6 +108,7 @@ namespace MiniBus.Services
             
             if( this.handlers.TryGetValue( msgName, out IHandlerRegistration handler ) )
             {
+                // TODO improve efficiency.
                 byte[] body = e.Body.ToArray();
                 this.tlvReaderStream.Position = 0L;
                 this.tlvReaderStream.Write( body, 0, body.Length );
