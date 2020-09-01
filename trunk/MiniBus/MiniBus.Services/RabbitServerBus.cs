@@ -51,6 +51,8 @@ namespace MiniBus.Services
          
             this.handlers.Add( def.Name, new HandlerRegistration<T>( this, handler ) );
 
+            this.tlvReader.RegisterContract<T>();
+
             ProvisionRabbit( def, queueName );
         }
 
