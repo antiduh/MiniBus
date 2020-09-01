@@ -28,6 +28,11 @@ namespace MiniBus
             this.messageMap = new Dictionary<Type, MessageDef>();
         }
 
+        public void Add<T>() where T : IMessage
+        {
+            Get<T>();
+        }
+
         /// <summary>
         /// Get's the <see cref="MessageDef"/> from a message's type.
         /// </summary>
