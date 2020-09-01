@@ -63,9 +63,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\TlvDemo\PocketTLV\PocketTLV.csproj">
+    <ProjectReference Include="..\..\TlvDemo\PocketTlv\PocketTlv.csproj">
       <Project>{81b9793c-696f-4de6-a045-86077dacf543}</Project>
-      <Name>PocketTLV</Name>
+      <Name>PocketTlv</Name>
     </ProjectReference>
     <ProjectReference Include="..\MiniBus.Services\MiniBus.Services.csproj">
       <Project>{db13bf81-8663-4004-80fe-1fd8c44c8747}</Project>
