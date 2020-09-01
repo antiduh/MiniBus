@@ -21,6 +21,9 @@ namespace MiniBus.Services
 
         private MsgDefRegistry msgReg;
 
+        private MemoryStream tlvReaderStream;
+        private TlvReader tlvReader;
+
         public RabbitServerBus( IModel rabbit )
         {
             this.channel = rabbit;
@@ -28,6 +31,10 @@ namespace MiniBus.Services
             this.knownExchanges = new HashSet<string>();
             this.handlers = new Dictionary<string, IHandlerRegistration>();
             this.msgReg = new MsgDefRegistry();
+
+            // TODO improve.
+            this.tlvReaderStream = new MemoryStream();
+            this.tlvReader = new TlvReader( this.tlvReaderStream );
 
             this.rabbitConsumer = new EventingBasicConsumer( rabbit );
             this.rabbitConsumer.Received += DispatchReceivedRabbitMsg;
@@ -103,7 +110,13 @@ namespace MiniBus.Services
 
             if( this.handlers.TryGetValue( msgName, out handler ) )
             {
-                handler.Deliver( payload, e.BasicProperties.CorrelationId, e.BasicProperties.ReplyTo );
+                byte[] body = e.Body.ToArray();
+                this.tlvReaderStream.Position = 0L;
+                this.tlvReaderStream.Write( body, 0, body.Length );
+
+                IMessage msg = (IMessage)this.tlvReader.ReadContract();
+
+                handler.Deliver( msg, e.BasicProperties.CorrelationId, e.BasicProperties.ReplyTo );
             }
             else
             {
@@ -146,7 +159,7 @@ namespace MiniBus.Services
 
         private interface IHandlerRegistration
         {
-            void Deliver( string payload, string senderCorrId, string senderReplyTo );
+            void Deliver( IMessage msg, string senderCorrId, string senderReplyTo );
         }
 
         private class HandlerRegistration<T> : IHandlerRegistration where T : IMessage, new()
@@ -160,16 +173,11 @@ namespace MiniBus.Services
                 this.handler = handler;
             }
 
-            public void Deliver( string payload, string senderCorrId, string senderReplyTo )
+            public void Deliver( IMessage msg, string senderCorrId, string senderReplyTo )
             {
-                T msg = new T();
-
-                // TODO
-                //msg.Read( payload );
-
                 var consumeContext = new RabbitConsumeContext( this.parent, senderCorrId, senderReplyTo );
 
-                this.handler.Invoke( msg, consumeContext );
+                this.handler.Invoke( (T)msg, consumeContext );
             }
         }
 
