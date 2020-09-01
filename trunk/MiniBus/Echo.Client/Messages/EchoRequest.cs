@@ -8,9 +8,7 @@ namespace Echo.Client.Messages
     [MsgName( "voren.echo.EchoRequest", "voren-core" )]
     public class EchoRequest : IMessage
     {
-        public EchoRequest()
-        {
-        }
+        public EchoRequest() { }
 
         public EchoRequest( string echoMsg )
         {
