@@ -81,7 +81,7 @@ namespace MiniBus.Services
 
         public void DeclareMessage<T>() where T : IMessage, new()
         {
-            MessageDef msgDef = this.msgReg.Get<T>();
+            this.msgReg.Add<T>();
 
             this.tlvReader.RegisterContract<T>();
         }
