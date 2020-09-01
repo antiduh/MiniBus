@@ -13,7 +13,7 @@ namespace MiniBus.Services
 
         private HashSet<string> knownExchanges;
 
-        private Dictionary<string, IRegistrationContainer> handlers;
+        private Dictionary<string, IHandlerRegistration> handlers;
 
         private string privateQueueName;
 
@@ -24,7 +24,7 @@ namespace MiniBus.Services
             this.channel = rabbit;
 
             this.knownExchanges = new HashSet<string>();
-            this.handlers = new Dictionary<string, IRegistrationContainer>();
+            this.handlers = new Dictionary<string, IHandlerRegistration>();
             this.msgReg = new MsgDefRegistry();
 
             this.rabbitConsumer = new EventingBasicConsumer( rabbit );
@@ -36,7 +36,7 @@ namespace MiniBus.Services
         {
             MessageDef def = this.msgReg.Get<T>();
          
-            this.handlers.Add( def.Name, new RegistrationContainer<T>( this, handler ) );
+            this.handlers.Add( def.Name, new HandlerRegistration<T>( this, handler ) );
 
             ProvisionRabbit( def, queueName );
         }
@@ -87,7 +87,7 @@ namespace MiniBus.Services
             
             string payload = Serializer.ReadBody( e.Body.ToArray() );
 
-            IRegistrationContainer handler;
+            IHandlerRegistration handler;
 
             if( this.handlers.TryGetValue( msgName, out handler ) )
             {
@@ -136,17 +136,17 @@ namespace MiniBus.Services
             Console.WriteLine( $"ServerBus: Consumer shutdown." );
         }
 
-        private interface IRegistrationContainer
+        private interface IHandlerRegistration
         {
             void Deliver( string payload, string senderCorrId, string senderReplyTo );
         }
 
-        private class RegistrationContainer<T> : IRegistrationContainer where T : IMessage, new()
+        private class HandlerRegistration<T> : IHandlerRegistration where T : IMessage, new()
         {
             private readonly RabbitServerBus parent;
             private readonly Action<T, IConsumeContext> handler;
 
-            public RegistrationContainer( RabbitServerBus parent, Action<T, IConsumeContext> handler )
+            public HandlerRegistration( RabbitServerBus parent, Action<T, IConsumeContext> handler )
             {
                 this.parent = parent;
                 this.handler = handler;
