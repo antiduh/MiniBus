@@ -5,12 +5,12 @@ namespace MiniBus.ServiceApi
 {
     public class TlvBufferReader : ITlvReader
     {
-        private readonly MemoryStreamView view;
+        private readonly BufferReaderStream view;
         private readonly TlvStreamReader tlvReader;
 
         public TlvBufferReader()
         {
-            this.view = new MemoryStreamView();
+            this.view = new BufferReaderStream();
             this.tlvReader = new TlvStreamReader( this.view );
         }
 

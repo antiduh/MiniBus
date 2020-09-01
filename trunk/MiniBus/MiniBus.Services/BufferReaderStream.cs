@@ -5,7 +5,7 @@ namespace MiniBus.ServiceApi
 {
     /// <summary>
     /// Represents byte arrays (or slices thereof) as a read-only <see cref="Stream"/>, while
-    /// allowing re-use of the <see cref="MemoryStreamView"/> to minimize memory churn.
+    /// allowing re-use of the <see cref="BufferReaderStream"/> to minimize memory churn.
     /// </summary>
     /// <example>
     /// byte[] buffer; int start; int length;
@@ -29,7 +29,7 @@ namespace MiniBus.ServiceApi
     /// This class calls virtual members in its constructor call chain, and thus is marked as sealed to
     /// ensure that it is the most-derived type in the inheritance chain.
     /// </remarks>
-    public sealed class MemoryStreamView : Stream
+    public sealed class BufferReaderStream : Stream
     {
         private byte[] buffer;
 
@@ -37,14 +37,14 @@ namespace MiniBus.ServiceApi
 
         private int bufCount;
 
-        public MemoryStreamView()
+        public BufferReaderStream()
         {
             this.buffer = null;
             this.bufStart = 0;
             this.bufCount = 0;
         }
 
-        public MemoryStreamView( byte[] buffer, int start, int length )
+        public BufferReaderStream( byte[] buffer, int start, int length )
         {
             Load( buffer, start, length );
         }
