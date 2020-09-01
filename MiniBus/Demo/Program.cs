@@ -34,7 +34,7 @@ namespace Demo
 
             void ITlvContract.Parse( ITlvParseContext parseContext )
             {
-                this.Text = parseContext.ParseTag<StringTag>( 0 );
+                this.Text = parseContext.Tag<StringTag>( 0 );
             }
 
             void ITlvContract.Save( ITlvSaveContext saveContext )

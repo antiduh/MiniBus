@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using PocketTLV;
 using PocketTLV.Primitives;
 
@@ -23,21 +19,20 @@ namespace MiniBus.Gateway
 
         public ITlvContract Message { get; set; }
 
-        void ITlvContract.Save( ITlvSaveContext saveContext )
+        void ITlvContract.Save( ITlvSaveContext save )
         {
-            saveContext.Save( 0, new StringTag( this.Exchange ) );
-            saveContext.Save( 1, new StringTag( this.RoutingKey ) );
-            saveContext.Save( 2, new StringTag( this.MessageName ) );
-            saveContext.Save( 3, this.Message );
+            save.Save( 0, new StringTag( this.Exchange ) );
+            save.Save( 1, new StringTag( this.RoutingKey ) );
+            save.Save( 2, new StringTag( this.MessageName ) );
+            save.Save( 3, this.Message );
         }
 
-        void ITlvContract.Parse( ITlvParseContext parseContext )
+        void ITlvContract.Parse( ITlvParseContext parse )
         {
-            this.Exchange = parseContext.ParseTag<StringTag>( 0 );
-            this.RoutingKey = parseContext.ParseTag<StringTag>( 1 );
-            this.MessageName = parseContext.ParseTag<StringTag>( 2 );
-            this.Message = parseContext.ParseSubContract( 3 );
+            this.Exchange = parse.Tag<StringTag>( 0 );
+            this.RoutingKey = parse.Tag<StringTag>( 1 );
+            this.MessageName = parse.Tag<StringTag>( 2 );
+            this.Message = parse.Contract( 3 );
         }
-
     }
 }
