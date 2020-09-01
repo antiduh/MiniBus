@@ -23,14 +23,14 @@ namespace Echo.Client.Messages
 
         int ITlvContract.ContractId => EchoTlvs.VoidCalling;
 
-        void ITlvContract.Parse( ITlvParseContext parseContext )
+        void ITlvContract.Parse( ITlvParseContext parse )
         {
-            this.Message = parseContext.Tag<StringTag>( 0 );
+            this.Message = parse.Tag<StringTag>( 0 );
         }
 
-        void ITlvContract.Save( ITlvSaveContext saveContext )
+        void ITlvContract.Save( ITlvSaveContext save )
         {
-            saveContext.Tag( 0, new StringTag( this.Message ) );
+            save.Tag( 0, new StringTag( this.Message ) );
         }
     }
 }
