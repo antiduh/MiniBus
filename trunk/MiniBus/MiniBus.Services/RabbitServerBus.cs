@@ -106,11 +106,7 @@ namespace MiniBus.Services
         {
             string msgName = e.BasicProperties.MessageId;
             
-            string payload = Serializer.ReadBody( e.Body.ToArray() );
-
-            IHandlerRegistration handler;
-
-            if( this.handlers.TryGetValue( msgName, out handler ) )
+            if( this.handlers.TryGetValue( msgName, out IHandlerRegistration handler ) )
             {
                 byte[] body = e.Body.ToArray();
                 this.tlvReaderStream.Position = 0L;
