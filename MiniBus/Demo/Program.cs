@@ -32,14 +32,14 @@ namespace Demo
 
             public int ContractId => 1;
 
-            void ITlvContract.Parse( ITlvParseContext parseContext )
+            void ITlvContract.Parse( ITlvParseContext parse )
             {
-                this.Text = parseContext.Tag<StringTag>( 0 );
+                this.Text = parse.Tag<StringTag>( 0 );
             }
 
-            void ITlvContract.Save( ITlvSaveContext saveContext )
+            void ITlvContract.Save( ITlvSaveContext save )
             {
-                saveContext.Save( 0, new StringTag( this.Text ) );
+                save.Tag( 0, new StringTag( this.Text ) );
             }
         }
 

@@ -26,7 +26,7 @@ namespace Echo.Client.Messages
 
         void ITlvContract.Save( ITlvSaveContext save )
         {
-            save.Save( 0, new StringTag( this.EchoMsg ) );
+            save.Tag( 0, new StringTag( this.EchoMsg ) );
         }
     }
 }

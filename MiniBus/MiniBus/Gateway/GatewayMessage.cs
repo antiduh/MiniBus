@@ -21,10 +21,10 @@ namespace MiniBus.Gateway
 
         void ITlvContract.Save( ITlvSaveContext save )
         {
-            save.Save( 0, new StringTag( this.Exchange ) );
-            save.Save( 1, new StringTag( this.RoutingKey ) );
-            save.Save( 2, new StringTag( this.MessageName ) );
-            save.Save( 3, this.Message );
+            save.Tag( 0, new StringTag( this.Exchange ) );
+            save.Tag( 1, new StringTag( this.RoutingKey ) );
+            save.Tag( 2, new StringTag( this.MessageName ) );
+            save.Contract( 3, this.Message );
         }
 
         void ITlvContract.Parse( ITlvParseContext parse )

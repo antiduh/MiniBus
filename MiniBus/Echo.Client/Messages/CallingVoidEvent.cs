@@ -30,7 +30,7 @@ namespace Echo.Client.Messages
 
         void ITlvContract.Save( ITlvSaveContext saveContext )
         {
-            saveContext.Save( 0, new StringTag( this.Message ) );
+            saveContext.Tag( 0, new StringTag( this.Message ) );
         }
     }
 }
