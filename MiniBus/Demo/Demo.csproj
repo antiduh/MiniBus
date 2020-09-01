@@ -91,9 +91,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\TlvDemo\PocketTLV\PocketTLV.csproj">
-      <Project>{81b9793c-696f-4de6-a045-86077dacf543}</Project>
-      <Name>PocketTLV</Name>
+    <ProjectReference Include="..\..\TlvDemo\PocketTlv\PocketTlv.csproj">
+      <Project>{81B9793C-696F-4DE6-A045-86077DACF543}</Project>
+      <Name>PocketTlv</Name>
     </ProjectReference>
     <ProjectReference Include="..\Echo.Client\Echo.Client.csproj">
       <Project>{c61b17ed-9d1d-40e8-af94-f47d944df1b5}</Project>

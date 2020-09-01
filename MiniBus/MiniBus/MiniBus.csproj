@@ -53,9 +53,9 @@
     <Compile Include="Serializer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\TlvDemo\PocketTLV\PocketTLV.csproj">
+    <ProjectReference Include="..\..\TlvDemo\PocketTlv\PocketTlv.csproj">
       <Project>{81b9793c-696f-4de6-a045-86077dacf543}</Project>
-      <Name>PocketTLV</Name>
+      <Name>PocketTlv</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

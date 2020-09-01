@@ -79,9 +79,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\TlvDemo\PocketTLV\PocketTLV.csproj">
+    <ProjectReference Include="..\..\TlvDemo\PocketTlv\PocketTlv.csproj">
       <Project>{81b9793c-696f-4de6-a045-86077dacf543}</Project>
-      <Name>PocketTLV</Name>
+      <Name>PocketTlv</Name>
     </ProjectReference>
     <ProjectReference Include="..\MiniBus\MiniBus.csproj">
       <Project>{8f603284-f309-473b-ac8e-eb88f602aeb6}</Project>
