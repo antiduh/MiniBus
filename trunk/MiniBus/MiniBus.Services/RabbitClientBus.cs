@@ -63,7 +63,7 @@ namespace MiniBus.Services
             // - Make sure the exchange exists
             // - Bind the routing key to our private queue.
 
-            this.eventHandlers.Add( msgDef.Name, new EventRegistration<T>( this, handler ) );
+            this.eventHandlers.Add( msgDef.Name, new EventRegistration<T>( handler ) );
 
             if( knownExchanges.Contains( msgDef.Exchange ) == false )
             {
@@ -201,12 +201,10 @@ namespace MiniBus.Services
 
         private class EventRegistration<T> : IEventRegistration where T : IMessage, new()
         {
-            private readonly RabbitClientBus parent;
             private readonly Action<T> handler;
 
-            public EventRegistration( RabbitClientBus parent, Action<T> handler )
+            public EventRegistration( Action<T> handler )
             {
-                this.parent = parent;
                 this.handler = handler;
             }
 
