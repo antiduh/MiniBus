@@ -59,7 +59,7 @@ namespace Demo
 
             TcpClient client = new TcpClient( "127.0.0.1", 10001 );
 
-            TlvWriter writer = new TlvWriter( client.GetStream() );
+            TlvStreamWriter writer = new TlvStreamWriter( client.GetStream() );
 
             writer.Write( frame );
 

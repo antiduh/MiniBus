@@ -15,8 +15,8 @@ namespace MiniBus.Gateway
 
         private Thread receiveThread;
 
-        private TlvReader tlvReader;
-        private TlvWriter tlvWriter;
+        private TlvStreamReader tlvReader;
+        private TlvStreamWriter tlvWriter;
 
         private bool started;
 
@@ -26,8 +26,8 @@ namespace MiniBus.Gateway
 
             this.started = false;
 
-            this.tlvReader = new TlvReader( client );
-            this.tlvWriter = new TlvWriter( client );
+            this.tlvReader = new TlvStreamReader( client );
+            this.tlvWriter = new TlvStreamWriter( client );
         }
 
         public event Action<ITlvContract> Received;
