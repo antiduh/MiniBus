@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using MiniBus.ServiceApi;
 using PocketTlv;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -21,8 +22,7 @@ namespace MiniBus.Services
 
         private MsgDefRegistry msgReg;
 
-        private MemoryStream tlvReaderStream;
-        private TlvStreamReader tlvReader;
+        private TlvBufferReader tlvReader;
 
         public RabbitServerBus( IModel rabbit )
         {
@@ -33,8 +33,7 @@ namespace MiniBus.Services
             this.msgReg = new MsgDefRegistry();
 
             // TODO improve.
-            this.tlvReaderStream = new MemoryStream();
-            this.tlvReader = new TlvStreamReader( this.tlvReaderStream );
+            this.tlvReader = new TlvBufferReader();
 
             this.rabbitConsumer = new EventingBasicConsumer( rabbit );
             this.rabbitConsumer.Received += DispatchReceivedRabbitMsg;
@@ -108,13 +107,11 @@ namespace MiniBus.Services
             
             if( this.handlers.TryGetValue( msgName, out IHandlerRegistration handler ) )
             {
-                // TODO improve efficiency.
-                byte[] body = e.Body.ToArray();
-                this.tlvReaderStream.Position = 0L;
-                this.tlvReaderStream.Write( body, 0, body.Length );
-                this.tlvReaderStream.Position = 0L;
+                IMessage msg;
 
-                IMessage msg = (IMessage)this.tlvReader.ReadContract();
+                this.tlvReader.LoadBuffer( e.Body.ToArray() );
+                msg = (IMessage)this.tlvReader.ReadContract();
+                this.tlvReader.UnloadBuffer();
 
                 handler.Deliver( msg, e.BasicProperties.CorrelationId, e.BasicProperties.ReplyTo );
             }

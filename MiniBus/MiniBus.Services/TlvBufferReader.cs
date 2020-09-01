@@ -5,29 +5,53 @@ namespace MiniBus.ServiceApi
 {
     public class TlvBufferReader : ITlvReader
     {
+        private readonly MemoryStreamView view;
+        private readonly TlvStreamReader tlvReader;
+
+        public TlvBufferReader()
+        {
+            this.view = new MemoryStreamView();
+            this.tlvReader = new TlvStreamReader( this.view );
+        }
+
+        public void LoadBuffer( byte[] buffer )
+        {
+            this.view.Load( buffer, 0, buffer.Length );
+        }
+
+        public void LoadBuffer( byte[] buffer, int start, int length )
+        {
+            this.view.Load( buffer, start, length );
+        }
+
+        public void UnloadBuffer()
+        {
+            this.view.Unload();
+        }
+
         public ITlvContract ReadContract()
         {
-            throw new NotImplementedException();
+            return this.tlvReader.ReadContract();
         }
 
         public T ReadContract<T>() where T : ITlvContract, new()
         {
-            throw new NotImplementedException();
+            return this.tlvReader.ReadContract<T>();
         }
 
         public ITag ReadTag()
         {
-            throw new NotImplementedException();
+            return this.tlvReader.ReadTag();
         }
 
         public T ReadTag<T>() where T : ITag
         {
-            throw new NotImplementedException();
+            return this.tlvReader.ReadTag<T>();
         }
 
         public void RegisterContract<T>() where T : ITlvContract, new()
         {
-            throw new NotImplementedException();
+            this.tlvReader.RegisterContract<T>();
         }
     }
 }
