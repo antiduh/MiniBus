@@ -5,6 +5,10 @@ namespace MiniBus.ServiceApi
 {
     public class TlvBufferWriter : ITlvWriter
     {
+        public TlvBufferWriter()
+        {
+        }
+
         public void Write( ITag tag )
         {
             throw new NotImplementedException();
