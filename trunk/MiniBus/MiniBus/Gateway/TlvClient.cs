@@ -2,7 +2,7 @@
 using System.IO;
 using System.Net.Sockets;
 using System.Threading;
-using PocketTLV;
+using PocketTlv;
 
 namespace MiniBus.Gateway
 {

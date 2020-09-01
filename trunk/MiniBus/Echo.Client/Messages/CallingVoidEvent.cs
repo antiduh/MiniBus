@@ -1,8 +1,7 @@
 ﻿using System;
 using ClientDemo.Messages;
 using MiniBus;
-using PocketTLV;
-using PocketTLV.Primitives;
+using PocketTlv;
 
 namespace Echo.Client.Messages
 {
