@@ -1,6 +1,5 @@
 ﻿using System;
-using PocketTLV;
-using PocketTLV.Primitives;
+using PocketTlv;
 
 namespace MiniBus.ServiceApi
 {

@@ -7,8 +7,7 @@ using Echo.Service;
 using Gateway.Service;
 using MiniBus.Gateway;
 using MiniBus.Services;
-using PocketTLV;
-using PocketTLV.Primitives;
+using PocketTlv;
 using RabbitMQ.Client;
 
 namespace Demo

@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using System.Threading;
 using MiniBus.Gateway;
 using MiniBus.Services;
-using PocketTLV;
+using PocketTlv;
 using RabbitMQ.Client;
 
 namespace Gateway.Service
