@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using PocketTLV;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -81,7 +83,13 @@ namespace MiniBus.Services
 
             props.MessageId = msgDef.Name;
 
-            ReadOnlyMemory<byte> body = Serializer.MakeBody( envelope.Message );
+            // TODO improve efficiency.
+            var stream = new MemoryStream();
+            var writer = new TlvWriter( stream );
+
+            writer.Write( envelope.Message );
+
+            ReadOnlyMemory<byte> body = stream.GetBuffer();
             this.channel.BasicPublish( exchange, routingKey, props, body );
         }
 
