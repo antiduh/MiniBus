@@ -53,7 +53,7 @@ namespace MiniBus.Services
 
             this.tlvReader.RegisterContract<T>();
 
-            ProvisionRabbit( def, queueName );
+            ProvisionRabbitForMessageDef( def, queueName );
         }
 
         public void SendMessage( Envelope envelope )
@@ -124,7 +124,7 @@ namespace MiniBus.Services
             }
         }
 
-        private void ProvisionRabbit( MessageDef msgDef, string queueName )
+        private void ProvisionRabbitForMessageDef( MessageDef msgDef, string queueName )
         {
             // Note that it's OK to tell rabbit to declare an exchange that already exists; that's
             // not what this method tries to prevent. The purpose here is to prevent us from wasting
