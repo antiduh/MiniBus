@@ -25,7 +25,7 @@ namespace Echo.Client.Messages
 
         void ITlvContract.Parse( ITlvParseContext parseContext )
         {
-            this.Message = parseContext.ParseTag<StringTag>( 0 );
+            this.Message = parseContext.Tag<StringTag>( 0 );
         }
 
         void ITlvContract.Save( ITlvSaveContext saveContext )
