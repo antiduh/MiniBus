@@ -2,8 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using MiniBus;
-using MiniBus.ClientApi;
 using PocketTlv;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
