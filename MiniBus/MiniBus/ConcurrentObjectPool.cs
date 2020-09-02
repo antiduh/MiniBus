@@ -1,19 +1,15 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MiniBus.ClientApi
 {
-    public class ObjectPool<T>
+    public class ConcurrentObjectPool<T>
     {
         private readonly ConcurrentBag<T> objects;
 
         private readonly Func<T> objectGenerator;
 
-        public ObjectPool( Func<T> objectGenerator )
+        public ConcurrentObjectPool( Func<T> objectGenerator )
         {
             if( objectGenerator == null )
             {
