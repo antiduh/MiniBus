@@ -38,6 +38,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ObjectPool.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="Gateway\GatewayMessage.cs" />
     <Compile Include="IConsumeContext.cs" />
