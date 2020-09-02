@@ -17,7 +17,7 @@ namespace MiniBus.Services
 
         private MsgDefRegistry msgReg;
 
-        private ConcurrentObjectPool<RabbitRequestContext> requestContextPool;
+        private ObjectPool<RabbitRequestContext> requestContextPool;
 
         private Dictionary<Guid, RabbitRequestContext> pendingConversations;
         private readonly Dictionary<string, IEventRegistration> eventHandlers;
@@ -32,7 +32,7 @@ namespace MiniBus.Services
             this.knownExchanges = new HashSet<string>();
             this.eventHandlers = new Dictionary<string, IEventRegistration>();
 
-            this.requestContextPool = new ConcurrentObjectPool<RabbitRequestContext>( () => new RabbitRequestContext( this ) );
+            this.requestContextPool = new ObjectPool<RabbitRequestContext>( () => new RabbitRequestContext( this ) );
             this.pendingConversations = new Dictionary<Guid, RabbitRequestContext>();
             this.msgReg = new MsgDefRegistry();
 
