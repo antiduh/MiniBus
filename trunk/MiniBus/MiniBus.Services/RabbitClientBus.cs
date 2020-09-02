@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using MiniBus;
+using MiniBus.ClientApi;
 using PocketTlv;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -18,6 +19,8 @@ namespace MiniBus.Services
 
         private MsgDefRegistry msgReg;
 
+        private ObjectPool<RabbitRequestContext> requestContextPool;
+
         private Dictionary<Guid, RabbitRequestContext> pendingConversations;
         private readonly Dictionary<string, IEventRegistration> eventHandlers;
 
@@ -31,6 +34,7 @@ namespace MiniBus.Services
             this.knownExchanges = new HashSet<string>();
             this.eventHandlers = new Dictionary<string, IEventRegistration>();
 
+            this.requestContextPool = new ObjectPool<RabbitRequestContext>( () => new RabbitRequestContext( this ) );
             this.pendingConversations = new Dictionary<Guid, RabbitRequestContext>();
             this.msgReg = new MsgDefRegistry();
 
@@ -88,7 +92,9 @@ namespace MiniBus.Services
 
         public IRequestContext StartRequest()
         {
-            var context = new RabbitRequestContext( this );
+            var context = this.requestContextPool.Get();
+
+            context.Initialize();
 
             this.pendingConversations.Add( context.ConversationId, context );
 
@@ -214,17 +220,31 @@ namespace MiniBus.Services
             {
                 this.bus = bus;
 
-                this.redirectQueue = null;
-
-                this.ConversationId = Guid.NewGuid();
-
                 this.inQueue = new BlockingCollection<Dispatch>();
-
-                this.haveRedirect = false;
-                this.redirectQueue = null;
             }
 
             public Guid ConversationId { get; private set; }
+
+            public void Initialize()
+            {
+                this.ConversationId = Guid.NewGuid();
+                this.redirectQueue = null;
+                this.haveRedirect = false;
+            }
+
+            public void Dispose()
+            {
+                this.bus.pendingConversations.Remove( this.ConversationId );
+
+                this.ConversationId = Guid.Empty;
+                this.redirectQueue = null;
+                this.haveRedirect = false;
+
+                while( this.inQueue.Count > 0 )
+                {
+                    this.inQueue.Take();
+                }
+            }
 
             public void SendRequest( IMessage msg )
             {
@@ -269,11 +289,6 @@ namespace MiniBus.Services
             public void DispatchMessage( Envelope env, IMessage msg )
             {
                 this.inQueue.Add( new Dispatch( env, msg ) );
-            }
-
-            public void Dispose()
-            {
-                this.bus.pendingConversations.Remove( this.ConversationId );
             }
 
             private IMessage WaitResponseInternal( TimeSpan timeout )
