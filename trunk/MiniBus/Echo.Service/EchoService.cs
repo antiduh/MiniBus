@@ -31,8 +31,6 @@ namespace Echo.Service
                 
         private void HandleEchoRequest( EchoRequest request, IConsumeContext consumeContext )
         {
-            Console.WriteLine( $"Service {index}: Echo request - '{request.EchoMsg}'." );
-
             var opts = new ReplyOptions() { RedirectReplies = true };
 
             consumeContext.Reply( new EchoReply( request.EchoMsg ), opts );
