@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 
-namespace MiniBus.ClientApi
+namespace MiniBus
 {
     public class ConcurrentObjectPool<T>
     {
