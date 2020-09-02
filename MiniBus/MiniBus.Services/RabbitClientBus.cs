@@ -271,6 +271,11 @@ namespace MiniBus.Services
                 this.inQueue.Add( new Dispatch( env, msg ) );
             }
 
+            public void Dispose()
+            {
+                this.bus.pendingConversations.Remove( this.ConversationId );
+            }
+
             private IMessage WaitResponseInternal( TimeSpan timeout )
             {
                 Dispatch dispatch;
