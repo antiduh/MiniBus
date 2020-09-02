@@ -13,7 +13,7 @@ namespace MiniBus
         void EventHandler<T>( Action<T> handler ) where T : IMessage, new();
     }
 
-    public interface IRequestContext
+    public interface IRequestContext : IDisposable
     {
         void SendRequest( IMessage msg );
 
