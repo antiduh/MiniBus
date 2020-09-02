@@ -6,8 +6,8 @@ namespace MiniBus.ServiceApi
 {
     public class TlvBufferWriter : ITlvWriter
     {
-        private MemoryStream stream;
-        private TlvStreamWriter tlvWriter;
+        private readonly MemoryStream stream;
+        private readonly TlvStreamWriter tlvWriter;
 
         public TlvBufferWriter()
         {
