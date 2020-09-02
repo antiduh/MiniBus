@@ -24,6 +24,8 @@ namespace MiniBus.Services
 
         private TlvBufferReader tlvReader;
 
+        private TlvBufferWriter tlvWriter;
+
         public RabbitServerBus( IModel rabbit )
         {
             this.channel = rabbit;
@@ -32,8 +34,8 @@ namespace MiniBus.Services
             this.handlers = new Dictionary<string, IHandlerRegistration>();
             this.msgReg = new MsgDefRegistry();
 
-            // TODO improve.
             this.tlvReader = new TlvBufferReader();
+            this.tlvWriter = new TlvBufferWriter();
 
             this.rabbitConsumer = new EventingBasicConsumer( rabbit );
             this.rabbitConsumer.Received += DispatchReceivedRabbitMsg;
@@ -91,14 +93,9 @@ namespace MiniBus.Services
 
             props.MessageId = msgDef.Name;
 
-            // TODO improve efficiency.
-            var stream = new MemoryStream();
-            var writer = new TlvStreamWriter( stream );
-
-            writer.Write( envelope.Message );
-
-            ReadOnlyMemory<byte> body = stream.GetBuffer();
-            this.channel.BasicPublish( exchange, routingKey, props, body );
+            this.tlvWriter.Write( envelope.Message );
+            this.channel.BasicPublish( exchange, routingKey, props, this.tlvWriter.GetBuffer() );
+            this.tlvWriter.Reset();
         }
 
         private void DispatchReceivedRabbitMsg( object sender, BasicDeliverEventArgs e )
