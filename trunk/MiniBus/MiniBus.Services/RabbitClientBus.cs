@@ -116,9 +116,12 @@ namespace MiniBus.Services
 
             props.MessageId = msgDef.Name;
 
-            this.tlvWriter.Write( envelope.Message );
-            this.channel.BasicPublish( exchange, routingKey, props, this.tlvWriter.GetBuffer() );
-            this.tlvWriter.Reset();
+            lock( this.tlvWriter )
+            {
+                this.tlvWriter.Write( envelope.Message );
+                this.channel.BasicPublish( exchange, routingKey, props, this.tlvWriter.GetBuffer() );
+                this.tlvWriter.Reset();
+            }
         }
 
         private void DispatchReceivedRabbitMsg( object sender, BasicDeliverEventArgs e )
@@ -127,9 +130,12 @@ namespace MiniBus.Services
 
             string msgName = e.BasicProperties.MessageId;
 
-            this.tlvReader.LoadBuffer( e.Body.ToArray() );
-            msg = (IMessage)this.tlvReader.ReadContract();
-            this.tlvReader.UnloadBuffer();
+            lock( this.tlvReader )
+            {
+                this.tlvReader.LoadBuffer( e.Body.ToArray() );
+                msg = (IMessage)this.tlvReader.ReadContract();
+                this.tlvReader.UnloadBuffer();
+            }
 
             Envelope env = new Envelope()
             {
