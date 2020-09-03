@@ -26,7 +26,7 @@ namespace MiniBus.Services
         public RabbitServerBus( IModel rabbit )
         {
             this.channel = rabbit;
-
+            
             this.knownExchanges = new HashSet<string>();
             this.handlers = new Dictionary<string, IHandlerRegistration>();
             this.msgReg = new MsgDefRegistry();
@@ -90,9 +90,12 @@ namespace MiniBus.Services
 
             props.MessageId = msgDef.Name;
 
-            this.tlvWriter.Write( envelope.Message );
-            this.channel.BasicPublish( exchange, routingKey, props, this.tlvWriter.GetBuffer() );
-            this.tlvWriter.Reset();
+            lock( this.tlvWriter )
+            {
+                this.tlvWriter.Write( envelope.Message );
+                this.channel.BasicPublish( exchange, routingKey, props, this.tlvWriter.GetBuffer() );
+                this.tlvWriter.Reset();
+            }
         }
 
         private void DispatchReceivedRabbitMsg( object sender, BasicDeliverEventArgs e )
@@ -103,9 +106,12 @@ namespace MiniBus.Services
             {
                 IMessage msg;
 
-                this.tlvReader.LoadBuffer( e.Body.ToArray() );
-                msg = (IMessage)this.tlvReader.ReadContract();
-                this.tlvReader.UnloadBuffer();
+                lock( this.tlvReader )
+                {
+                    this.tlvReader.LoadBuffer( e.Body.ToArray() );
+                    msg = (IMessage)this.tlvReader.ReadContract();
+                    this.tlvReader.UnloadBuffer();
+                }
 
                 handler.Deliver( msg, e.BasicProperties.CorrelationId, e.BasicProperties.ReplyTo );
             }
