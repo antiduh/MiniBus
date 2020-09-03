@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading;
 using Echo.Client.Messages;
 using MiniBus;
@@ -28,7 +27,7 @@ namespace Echo.Service
 
             this.voidCallingTimer.Change( TimeSpan.FromSeconds( 2 ), TimeSpan.FromSeconds( 2 ) );
         }
-                
+
         private void HandleEchoRequest( EchoRequest request, IConsumeContext consumeContext )
         {
             var opts = new ReplyOptions() { RedirectReplies = true };

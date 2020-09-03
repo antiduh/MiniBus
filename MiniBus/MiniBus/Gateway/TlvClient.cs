@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Net.Sockets;
 using System.Threading;
 using PocketTlv;
 
@@ -82,8 +81,8 @@ namespace MiniBus.Gateway
                 {
                     break;
                 }
-                
-                this.Received?.Invoke( contract);
+
+                this.Received?.Invoke( contract );
             }
         }
 

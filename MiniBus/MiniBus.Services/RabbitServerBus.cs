@@ -46,7 +46,7 @@ namespace MiniBus.Services
         public void RegisterHandler<T>( Action<T, IConsumeContext> handler, string queueName ) where T : IMessage, new()
         {
             MessageDef def = this.msgReg.Get<T>();
-         
+
             this.handlers.Add( def.Name, new HandlerRegistration<T>( this, handler ) );
 
             this.tlvReader.RegisterContract<T>();
@@ -98,7 +98,7 @@ namespace MiniBus.Services
         private void DispatchReceivedRabbitMsg( object sender, BasicDeliverEventArgs e )
         {
             string msgName = e.BasicProperties.MessageId;
-            
+
             if( this.handlers.TryGetValue( msgName, out IHandlerRegistration handler ) )
             {
                 IMessage msg;
@@ -214,5 +214,4 @@ namespace MiniBus.Services
             }
         }
     }
-
 }

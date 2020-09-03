@@ -6,5 +6,4 @@
 
         void Reply( IMessage msg, ReplyOptions options );
     }
-
 }

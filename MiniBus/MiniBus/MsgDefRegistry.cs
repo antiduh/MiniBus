@@ -65,7 +65,6 @@ namespace MiniBus
 
             lock( this.messageMap )
             {
-
                 if( this.messageMap.TryGetValue( type, out def ) == false )
                 {
                     var msgName = type.GetCustomAttribute<MsgNameAttribute>( false );
