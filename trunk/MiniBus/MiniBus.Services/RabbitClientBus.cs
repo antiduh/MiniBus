@@ -136,7 +136,7 @@ namespace MiniBus.Services
                 CorrId = e.BasicProperties.CorrelationId,
                 SendRepliesTo = e.BasicProperties.ReplyTo,
             };
-           
+
             if( TryDispatchConversation( env, msg ) == false &&
                 TryDispatchEvent( msgName, msg ) == false )
             {

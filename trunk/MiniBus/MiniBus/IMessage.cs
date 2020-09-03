@@ -4,6 +4,5 @@ namespace MiniBus
 {
     public interface IMessage : ITlvContract
     {
-       
     }
 }
