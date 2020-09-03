@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace MiniBus.ServiceApi
+namespace MiniBus.Services
 {
     /// <summary>
     /// Represents byte arrays (or slices thereof) as a read-only <see cref="Stream"/>, while

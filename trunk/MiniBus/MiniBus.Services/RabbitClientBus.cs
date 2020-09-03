@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using MiniBus.ServiceApi;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 

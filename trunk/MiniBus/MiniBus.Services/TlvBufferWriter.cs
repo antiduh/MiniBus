@@ -2,7 +2,7 @@
 using System.IO;
 using PocketTlv;
 
-namespace MiniBus.ServiceApi
+namespace MiniBus.Services
 {
     public class TlvBufferWriter : ITlvWriter
     {

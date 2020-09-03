@@ -1,7 +1,7 @@
 ﻿using System;
 using PocketTlv;
 
-namespace MiniBus.ServiceApi
+namespace MiniBus.Services
 {
     public class TlvBufferReader : ITlvReader
     {

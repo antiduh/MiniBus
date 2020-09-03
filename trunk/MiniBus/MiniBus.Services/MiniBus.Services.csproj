@@ -7,8 +7,8 @@
     <ProjectGuid>{DB13BF81-8663-4004-80FE-1FD8C44C8747}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MiniBus.ServiceApi</RootNamespace>
-    <AssemblyName>MiniBus.ServiceApi</AssemblyName>
+    <RootNamespace>MiniBus.Services</RootNamespace>
+    <AssemblyName>MiniBus.Services</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
