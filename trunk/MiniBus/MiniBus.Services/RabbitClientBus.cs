@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
-using PocketTlv;
+using MiniBus.ServiceApi;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -22,8 +21,8 @@ namespace MiniBus.Services
         private Dictionary<Guid, RabbitRequestContext> pendingConversations;
         private readonly Dictionary<string, IEventRegistration> eventHandlers;
 
-        private MemoryStream tlvStream;
-        private TlvStreamReader tlvReader;
+        private TlvBufferWriter tlvWriter;
+        private TlvBufferReader tlvReader;
 
         public RabbitClientBus( IModel channel )
         {
@@ -36,8 +35,8 @@ namespace MiniBus.Services
             this.pendingConversations = new Dictionary<Guid, RabbitRequestContext>();
             this.msgReg = new MsgDefRegistry();
 
-            this.tlvStream = new MemoryStream();
-            this.tlvReader = new TlvStreamReader( this.tlvStream );
+            this.tlvWriter = new TlvBufferWriter();
+            this.tlvReader = new TlvBufferReader();
 
             this.rabbitConsumer = new EventingBasicConsumer( this.channel );
             this.rabbitConsumer.Received += DispatchReceivedRabbitMsg;
@@ -118,14 +117,9 @@ namespace MiniBus.Services
 
             props.MessageId = msgDef.Name;
 
-            // TODO improve efficiency.
-            var stream = new MemoryStream();
-            var writer = new TlvStreamWriter( stream );
-
-            writer.Write( envelope.Message );
-
-            ReadOnlyMemory<byte> body = stream.GetBuffer();
-            this.channel.BasicPublish( exchange, routingKey, props, body );
+            this.tlvWriter.Write( envelope.Message );
+            this.channel.BasicPublish( exchange, routingKey, props, this.tlvWriter.GetBuffer() );
+            this.tlvWriter.Reset();
         }
 
         private void DispatchReceivedRabbitMsg( object sender, BasicDeliverEventArgs e )
@@ -134,12 +128,9 @@ namespace MiniBus.Services
 
             string msgName = e.BasicProperties.MessageId;
 
-            byte[] body = e.Body.ToArray();
-            this.tlvStream.Position = 0L;
-            this.tlvStream.Write( body, 0, body.Length );
-            this.tlvStream.Position = 0L;
-
+            this.tlvReader.LoadBuffer( e.Body.ToArray() );
             msg = (IMessage)this.tlvReader.ReadContract();
+            this.tlvReader.UnloadBuffer();
 
             Envelope env = new Envelope()
             {
