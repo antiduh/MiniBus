@@ -23,6 +23,8 @@ namespace MiniBus.Services
 
         private TlvBufferWriter tlvWriter;
 
+        private ObjectPool<RabbitConsumeContext> consumeContextPool;
+
         public RabbitServerBus( IModel rabbit )
         {
             this.channel = rabbit;
@@ -33,6 +35,8 @@ namespace MiniBus.Services
 
             this.tlvReader = new TlvBufferReader();
             this.tlvWriter = new TlvBufferWriter();
+
+            this.consumeContextPool = new ObjectPool<RabbitConsumeContext>( () => new RabbitConsumeContext( this ) );
 
             this.rabbitConsumer = new EventingBasicConsumer( rabbit );
             this.rabbitConsumer.Received += DispatchReceivedRabbitMsg;
@@ -172,23 +176,35 @@ namespace MiniBus.Services
 
             public void Deliver( IMessage msg, string senderCorrId, string senderReplyTo )
             {
-                var consumeContext = new RabbitConsumeContext( this.parent, senderCorrId, senderReplyTo );
-
+                var consumeContext = this.parent.consumeContextPool.Get();
+                
+                consumeContext.Load( senderCorrId, senderReplyTo );
                 this.handler.Invoke( (T)msg, consumeContext );
+                consumeContext.Unload();
             }
         }
 
         private class RabbitConsumeContext : IConsumeContext
         {
             private readonly RabbitServerBus parent;
-            private readonly string senderCorrId;
-            private readonly string senderReplyTo;
-
-            public RabbitConsumeContext( RabbitServerBus parent, string senderCorrId, string senderReplyTo )
+            private string senderCorrId;
+            private string senderReplyTo;
+            
+            public RabbitConsumeContext( RabbitServerBus parent )
             {
                 this.parent = parent;
+            }
+
+            public void Load( string senderCorrId, string senderReplyTo )
+            {
                 this.senderCorrId = senderCorrId;
                 this.senderReplyTo = senderReplyTo;
+            }
+
+            public void Unload()
+            {
+                this.senderCorrId = null;
+                this.senderReplyTo = null;
             }
 
             public void Reply( IMessage msg )
