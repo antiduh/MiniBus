@@ -1,4 +1,5 @@
 ﻿using System;
+using MiniBus.ClientApi.Gateway;
 using PocketTlv;
 
 namespace MiniBus.Gateway
@@ -11,10 +12,12 @@ namespace MiniBus.Gateway
 
         public string MessageName { get; set; }
 
+        public string CorrelationId { get; set; }
+
         // Why did I have a Guid?
         //public string Guid { get; set; }
 
-        public int ContractId => 0;
+        public int ContractId => GatewayTlvs.GatewayMessage;
 
         public ITlvContract Message { get; set; }
 
@@ -23,7 +26,13 @@ namespace MiniBus.Gateway
             save.Tag( 0, new StringTag( this.Exchange ) );
             save.Tag( 1, new StringTag( this.RoutingKey ) );
             save.Tag( 2, new StringTag( this.MessageName ) );
-            save.Contract( 3, this.Message );
+
+            if( this.CorrelationId != null )
+            {
+                save.Tag( 3, new StringTag( this.CorrelationId ) );
+            }
+
+            save.Contract( 4, this.Message );
         }
 
         void ITlvContract.Parse( ITlvParseContext parse )
@@ -31,7 +40,13 @@ namespace MiniBus.Gateway
             this.Exchange = parse.Tag<StringTag>( 0 );
             this.RoutingKey = parse.Tag<StringTag>( 1 );
             this.MessageName = parse.Tag<StringTag>( 2 );
-            this.Message = parse.Contract( 3 );
+
+            if( parse.TryTag<StringTag>( 3, out StringTag corrIdTag ) )
+            {
+                this.CorrelationId = corrIdTag;
+            }
+
+            this.Message = parse.Contract( 4 );
         }
     }
 }
