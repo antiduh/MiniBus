@@ -45,7 +45,7 @@ namespace Demo
 
                 var env = new Envelope()
                 {
-                    CorrId = Guid.NewGuid().ToString( "B" ),
+                    CorrelationId = Guid.NewGuid().ToString( "B" ),
                     Message = new EchoRequest() { EchoMsg = "Hello" }
                 };
 

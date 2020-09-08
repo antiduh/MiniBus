@@ -73,9 +73,9 @@ namespace MiniBus.Services
             // Don't assign values to properties if they're null. Rabbit pays attention to whether or
             // not a field was assigned. If it's been assigned, it'll try to serialize it, causing it
             // to serialize a null field.
-            if( envelope.CorrId != null )
+            if( envelope.CorrelationId != null )
             {
-                props.CorrelationId = envelope.CorrId;
+                props.CorrelationId = envelope.CorrelationId;
             }
 
             if( envelope.SendRepliesTo != null )
@@ -233,7 +233,7 @@ namespace MiniBus.Services
                 Envelope replyEnv = new Envelope()
                 {
                     Message = msg,
-                    CorrId = this.senderCorrId,
+                    CorrelationId = this.senderCorrId,
                 };
 
                 if( options?.RedirectReplies == true )

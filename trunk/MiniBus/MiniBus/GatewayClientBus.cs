@@ -55,7 +55,7 @@ namespace MiniBus.ClientApi
 
             var gatewayMsg = new GatewayInboundMsg()
             {
-                CorrelationId = env.CorrId,
+                CorrelationId = env.CorrelationId,
                 Exchange = def.Exchange,
                 RoutingKey = def.Name,
                 MessageName = def.Name,
