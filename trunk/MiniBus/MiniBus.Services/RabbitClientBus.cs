@@ -207,7 +207,6 @@ namespace MiniBus.Services
             private readonly RabbitClientBus bus;
             private BlockingCollection<Dispatch> inQueue;
 
-            private bool haveRedirect;
             private string redirectQueue;
 
             public RabbitRequestContext( RabbitClientBus bus )
@@ -223,7 +222,6 @@ namespace MiniBus.Services
             {
                 this.ConversationId = Guid.NewGuid();
                 this.redirectQueue = null;
-                this.haveRedirect = false;
             }
 
             public void Dispose()
@@ -232,7 +230,6 @@ namespace MiniBus.Services
 
                 this.ConversationId = Guid.Empty;
                 this.redirectQueue = null;
-                this.haveRedirect = false;
 
                 while( this.inQueue.Count > 0 )
                 {
@@ -249,7 +246,7 @@ namespace MiniBus.Services
                     CorrId = this.ConversationId.ToString( "B" )
                 };
 
-                if( haveRedirect == false )
+                if( this.redirectQueue == null )
                 {
                     bus.SendMessage( env );
                 }
@@ -297,7 +294,6 @@ namespace MiniBus.Services
                 if( dispatch.Envelope.SendRepliesTo != null )
                 {
                     // The reply sent us a redirect to a private queue.
-                    this.haveRedirect = true;
                     this.redirectQueue = dispatch.Envelope.SendRepliesTo;
                 }
 
