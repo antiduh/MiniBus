@@ -3,8 +3,11 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Windows.Forms;
 using Echo.Client;
+using Echo.Client.Messages;
 using Echo.Service;
 using Gateway.Service;
+using MiniBus;
+using MiniBus.ClientApi;
 using MiniBus.Gateway;
 using MiniBus.Services;
 using PocketTlv;
@@ -20,49 +23,36 @@ namespace Demo
         [STAThread]
         private static void Main()
         {
-            RabbitBusDemo();
+            //RabbitBusDemo();
 
-            //TlvDemo();
+            GatewayDemo();
         }
 
-        public class EchoRequestTag : ITlvContract
+        private static void GatewayDemo()
         {
-            public string Text { get; set; }
-
-            public int ContractId => 1;
-
-            void ITlvContract.Parse( ITlvParseContext parse )
+            using( var conn = new RabbitConn() )
             {
-                this.Text = parse.Tag<StringTag>( 0 );
+                GatewayService gatewayService = new GatewayService( 10001 );
+                gatewayService.Connect( conn.Connect() );
+
+                GatewayClientBus client = new GatewayClientBus( "localhost", 10001 );
+                client.Connect();
+
+                var echoService = new EchoService( 0 );
+                echoService.Connect( new RabbitServerBus( conn.Connect() ) );
+
+
+
+                var env = new Envelope()
+                {
+                    CorrId = Guid.NewGuid().ToString( "B" ),
+                    Message = new EchoRequest() { EchoMsg = "Hello" }
+                };
+
+                client.SendMessage( env );
+
+                Thread.Sleep( 10 * 1000 );
             }
-
-            void ITlvContract.Save( ITlvSaveContext save )
-            {
-                save.Tag( 0, new StringTag( this.Text ) );
-            }
-        }
-
-        private static void TlvDemo()
-        {
-            var frame = new GatewayMessage()
-            {
-                Exchange = "voren-core",
-                RoutingKey = "voren.Echo",
-                MessageName = "EchoRequest",
-                //Guid = "123456",
-                Message = new EchoRequestTag() { Text = "Hello world." }
-            };
-
-            GatewayService service = new GatewayService( 10001 );
-            service.Start();
-
-            TcpClient client = new TcpClient( "127.0.0.1", 10001 );
-
-            TlvStreamWriter writer = new TlvStreamWriter( client.GetStream() );
-
-            writer.Write( frame );
-
-            Thread.Sleep( 10 * 1000 );
         }
 
         private static void RabbitBusDemo()
@@ -84,6 +74,7 @@ namespace Demo
                 {
                     Thread.Sleep( 1000 );
                     client1.DoEcho( "Hello" );
+                    Console.WriteLine( "EchoClient: Echo complete." );
                 }
             }
 

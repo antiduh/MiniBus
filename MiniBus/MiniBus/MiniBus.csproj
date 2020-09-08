@@ -38,9 +38,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GatewayClientBus.cs" />
+    <Compile Include="Gateway\GatewayHeartbeatResponse.cs" />
+    <Compile Include="Gateway\GatewayHeartbeatRequest.cs" />
+    <Compile Include="Gateway\GatewayInboundMsg.cs" />
+    <Compile Include="Gateway\GatewayOutboundMsg.cs" />
+    <Compile Include="Gateway\GatewayTlvs.cs" />
     <Compile Include="ObjectPool.cs" />
     <Compile Include="Enums.cs" />
-    <Compile Include="Gateway\GatewayMessage.cs" />
     <Compile Include="IConsumeContext.cs" />
     <Compile Include="Envelop.cs" />
     <Compile Include="IClientBus.cs" />
