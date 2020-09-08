@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -60,10 +61,10 @@ namespace MiniBus.Services
 
         public void SendMessage( Envelope envelope )
         {
-            SendMessage( envelope, null, null );
+            SendMessage( envelope, null, null, null );
         }
 
-        public void SendMessage( Envelope envelope, string exchange, string routingKey )
+        public void SendMessage( Envelope envelope, string exchange, string routingKey, string clientId )
         {
             MessageDef msgDef = this.msgReg.Get( envelope.Message );
 
@@ -80,6 +81,12 @@ namespace MiniBus.Services
             if( envelope.SendRepliesTo != null )
             {
                 props.ReplyTo = envelope.SendRepliesTo;
+            }
+
+            if( clientId != null )
+            {
+                props.Headers = new Dictionary<string, object>();
+                props.Headers["clientId"] = clientId;
             }
 
             if( exchange == null )
@@ -105,6 +112,12 @@ namespace MiniBus.Services
         private void DispatchReceivedRabbitMsg( object sender, BasicDeliverEventArgs e )
         {
             string msgName = e.BasicProperties.MessageId;
+            string clientId = null;
+
+            if( e.BasicProperties.Headers != null && e.BasicProperties.Headers.ContainsKey( "clientId" ) )
+            {
+                clientId = Encoding.UTF8.GetString( (byte[])e.BasicProperties.Headers["clientId"] );
+            }
 
             if( this.handlers.TryGetValue( msgName, out IHandlerRegistration handler ) )
             {
@@ -117,7 +130,7 @@ namespace MiniBus.Services
                     this.tlvReader.UnloadBuffer();
                 }
 
-                handler.Deliver( msg, e.BasicProperties.CorrelationId, e.BasicProperties.ReplyTo );
+                handler.Deliver( msg, e.BasicProperties.CorrelationId, e.BasicProperties.ReplyTo, clientId );
             }
             else
             {
@@ -160,7 +173,7 @@ namespace MiniBus.Services
 
         private interface IHandlerRegistration
         {
-            void Deliver( IMessage msg, string senderCorrId, string senderReplyTo );
+            void Deliver( IMessage msg, string senderCorrId, string senderReplyTo, string clientId );
         }
 
         private class HandlerRegistration<T> : IHandlerRegistration where T : IMessage, new()
@@ -174,11 +187,11 @@ namespace MiniBus.Services
                 this.handler = handler;
             }
 
-            public void Deliver( IMessage msg, string senderCorrId, string senderReplyTo )
+            public void Deliver( IMessage msg, string senderCorrId, string senderReplyTo, string clientId )
             {
                 var consumeContext = this.parent.consumeContextPool.Get();
                 
-                consumeContext.Load( senderCorrId, senderReplyTo );
+                consumeContext.Load( senderCorrId, senderReplyTo, clientId );
                 this.handler.Invoke( (T)msg, consumeContext );
                 consumeContext.Unload();
             }
@@ -189,22 +202,25 @@ namespace MiniBus.Services
             private readonly RabbitServerBus parent;
             private string senderCorrId;
             private string senderReplyTo;
+            private string clientId;
             
             public RabbitConsumeContext( RabbitServerBus parent )
             {
                 this.parent = parent;
             }
 
-            public void Load( string senderCorrId, string senderReplyTo )
+            public void Load( string senderCorrId, string senderReplyTo, string clientId )
             {
                 this.senderCorrId = senderCorrId;
                 this.senderReplyTo = senderReplyTo;
+                this.clientId = clientId;
             }
 
             public void Unload()
             {
                 this.senderCorrId = null;
                 this.senderReplyTo = null;
+                this.clientId = null;
             }
 
             public void Reply( IMessage msg )
@@ -231,7 +247,7 @@ namespace MiniBus.Services
                 }
                 else
                 {
-                    this.parent.SendMessage( replyEnv, "", this.senderReplyTo );
+                    this.parent.SendMessage( replyEnv, "", this.senderReplyTo, this.clientId );
                 }
             }
         }
