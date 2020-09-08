@@ -47,7 +47,7 @@
     <Compile Include="ObjectPool.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="IConsumeContext.cs" />
-    <Compile Include="Envelop.cs" />
+    <Compile Include="Envelope.cs" />
     <Compile Include="IClientBus.cs" />
     <Compile Include="IMessage.cs" />
     <Compile Include="MessageDef.cs" />
