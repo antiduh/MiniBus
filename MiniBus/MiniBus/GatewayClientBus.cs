@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net.Sockets;
 using MiniBus.ClientApi.Gateway;
 using MiniBus.Gateway;
@@ -17,12 +19,16 @@ namespace MiniBus.ClientApi
 
         private MsgDefRegistry msgDefs;
 
+        private Dictionary<Guid, GatewayRequestContext> pendingConversations;
+
+
         public GatewayClientBus( string hostname, int port )
         {
             this.hostname = hostname ?? throw new ArgumentNullException( nameof( hostname ) );
             this.port = port;
 
             this.msgDefs = new MsgDefRegistry();
+            this.pendingConversations = new Dictionary<Guid, GatewayRequestContext>();
         }
 
         public void Connect()
@@ -39,8 +45,8 @@ namespace MiniBus.ClientApi
 
         public void DeclareMessage<T>() where T : IMessage, new()
         {
-            // TODO Wait until events are implemented
-            throw new NotImplementedException();
+            this.msgDefs.Add<T>();
+            this.tlvClient.Register<T>();
         }
 
         public void EventHandler<T>( Action<T> handler ) where T : IMessage, new()
@@ -67,11 +73,45 @@ namespace MiniBus.ClientApi
 
         public IRequestContext StartRequest()
         {
-            throw new NotImplementedException();
+            var context = new GatewayRequestContext( this );
+
+            this.pendingConversations.Add( context.ConversationId, context );
+
+            return context;
+        }
+
+        private void SendContextMsg( IMessage msg, GatewayRequestContext context )
+        {
+            var env = new Envelope()
+            {
+                CorrelationId = context.ConversationId.ToString( "B" ),
+                Message = msg,
+            };
+
+            SendMessage( env );
         }
 
         private void TlvClient_Received( ITlvContract msg )
         {
+            var gatewayMsg = msg.Resolve<GatewayOutboundMsg>();
+
+            Guid contextId = Guid.Parse( gatewayMsg.CorrelationId );
+
+            Envelope env = new Envelope()
+            {
+                CorrelationId = gatewayMsg.CorrelationId,
+                SendRepliesTo = gatewayMsg.SendRepliesTo,
+            };
+
+            if( this.pendingConversations.TryGetValue( contextId, out GatewayRequestContext context ) )
+            {
+                context.DispatchMessage( env, gatewayMsg.Message );
+            }
+            else
+            {
+                Console.WriteLine( $"Client Failure: No handler registered for message {gatewayMsg.MessageName}." );
+            }
+
             Console.WriteLine( "Gateway client received: " + msg );
         }
 
@@ -79,19 +119,26 @@ namespace MiniBus.ClientApi
         {
             private readonly GatewayClientBus parent;
 
+            private BlockingCollection<Dispatch> inQueue;
+
             public GatewayRequestContext( GatewayClientBus parent )
             {
                 this.parent = parent;
+
+                this.ConversationId = Guid.NewGuid();
+                this.inQueue = new BlockingCollection<Dispatch>();
             }
+
+            public Guid ConversationId { get; private set; }
 
             public void Dispose()
             {
-                throw new NotImplementedException();
+                
             }
 
             public void SendRequest( IMessage msg )
             {
-                throw new NotImplementedException();
+                this.parent.SendContextMsg( msg, this );
             }
 
             public IMessage WaitResponse( TimeSpan timeout )
@@ -99,9 +146,32 @@ namespace MiniBus.ClientApi
                 throw new NotImplementedException();
             }
 
-            public T WaitResponse<T>( TimeSpan timeout ) where T : IMessage
+            public T WaitResponse<T>( TimeSpan timeout ) where T : IMessage, new()
             {
-                throw new NotImplementedException();
+                if( this.inQueue.TryTake( out Dispatch dispatch, timeout ) == false )
+                {
+                    throw new TimeoutException();
+                }
+
+                return dispatch.Message.Resolve<T>();
+            }
+
+            internal void DispatchMessage( Envelope env, ITlvContract msg )
+            {
+                this.inQueue.Add( new Dispatch( env, msg ) );
+            }
+
+            private struct Dispatch
+            {
+                public Dispatch( Envelope envelope, ITlvContract message )
+                {
+                    Envelope = envelope;
+                    Message = message;
+                }
+
+                public Envelope Envelope { get; private set; }
+
+                public ITlvContract Message { get; private set; }
             }
         }
 
