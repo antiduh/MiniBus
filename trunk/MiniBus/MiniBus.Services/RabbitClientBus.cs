@@ -261,7 +261,7 @@ namespace MiniBus.Services
                 return WaitResponseInternal( timeout );
             }
 
-            public T WaitResponse<T>( TimeSpan timeout ) where T : IMessage
+            public T WaitResponse<T>( TimeSpan timeout ) where T : IMessage, new()
             {
                 IMessage msg = WaitResponseInternal( timeout );
 
@@ -277,7 +277,7 @@ namespace MiniBus.Services
                 }
             }
 
-            public void DispatchMessage( Envelope env, IMessage msg )
+            internal void DispatchMessage( Envelope env, IMessage msg )
             {
                 this.inQueue.Add( new Dispatch( env, msg ) );
             }

@@ -41,15 +41,12 @@ namespace Demo
                 var echoService = new EchoService( 0 );
                 echoService.Connect( new RabbitServerBus( conn.Connect() ) );
 
-
-
-                var env = new Envelope()
-                {
-                    CorrelationId = Guid.NewGuid().ToString( "B" ),
-                    Message = new EchoRequest() { EchoMsg = "Hello" }
-                };
-
-                client.SendMessage( env );
+                var req = client.StartRequest();
+                client.DeclareMessage<EchoReply>();
+                req.SendRequest( new EchoRequest() { EchoMsg = "Hello" } );
+                
+                var response = req.WaitResponse<EchoReply>( TimeSpan.FromSeconds( 5000.0 ) );
+                Console.WriteLine( "Gateway demo complete. Echo response: " + response.EchoMsg );
 
                 Thread.Sleep( 10 * 1000 );
             }
