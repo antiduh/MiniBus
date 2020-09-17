@@ -52,7 +52,7 @@ namespace MiniBus.ClientApi
         public void EventHandler<T>( Action<T> handler ) where T : IMessage, new()
         {
             // TODO Wait until events are implemented
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
         public void SendMessage( Envelope env )
