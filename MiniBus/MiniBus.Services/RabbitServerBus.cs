@@ -194,6 +194,8 @@ namespace MiniBus.Services
                 consumeContext.Load( senderCorrId, senderReplyTo, clientId );
                 this.handler.Invoke( (T)msg, consumeContext );
                 consumeContext.Unload();
+
+                this.parent.consumeContextPool.Return( consumeContext );
             }
         }
 
