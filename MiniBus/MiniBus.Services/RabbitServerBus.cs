@@ -59,14 +59,14 @@ namespace MiniBus.Services
             ProvisionRabbitForMessageDef( def, queueName );
         }
 
-        public void SendMessage( Envelope envelope )
+        public void SendMessage( Envelope envelope, IMessage msg )
         {
-            SendMessage( envelope, null, null, null );
+            SendMessage( envelope, msg, null, null, null );
         }
 
-        public void SendMessage( Envelope envelope, string exchange, string routingKey, string clientId )
+        public void SendMessage( Envelope envelope, IMessage msg, string exchange, string routingKey, string clientId )
         {
-            MessageDef msgDef = this.msgReg.Get( envelope.Message );
+            MessageDef msgDef = this.msgReg.Get( msg );
 
             var props = this.channel.CreateBasicProperties();
 
@@ -103,7 +103,7 @@ namespace MiniBus.Services
 
             lock( this.tlvWriter )
             {
-                this.tlvWriter.Write( envelope.Message );
+                this.tlvWriter.Write( msg );
                 this.channel.BasicPublish( exchange, routingKey, props, this.tlvWriter.GetBuffer() );
                 this.tlvWriter.Reset();
             }
@@ -232,7 +232,6 @@ namespace MiniBus.Services
             {
                 Envelope replyEnv = new Envelope()
                 {
-                    Message = msg,
                     CorrelationId = this.senderCorrId,
                 };
 
@@ -243,11 +242,11 @@ namespace MiniBus.Services
 
                 if( this.senderReplyTo == null )
                 {
-                    this.parent.SendMessage( replyEnv );
+                    this.parent.SendMessage( replyEnv, msg );
                 }
                 else
                 {
-                    this.parent.SendMessage( replyEnv, "", this.senderReplyTo, this.clientId );
+                    this.parent.SendMessage( replyEnv, msg, "", this.senderReplyTo, this.clientId );
                 }
             }
         }

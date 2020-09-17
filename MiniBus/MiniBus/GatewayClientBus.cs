@@ -55,9 +55,9 @@ namespace MiniBus.ClientApi
             //throw new NotImplementedException();
         }
 
-        public void SendMessage( Envelope env )
+        public void SendMessage( Envelope env, IMessage msg )
         {
-            MessageDef def = this.msgDefs.Get( env.Message );
+            MessageDef def = this.msgDefs.Get( msg );
 
             var gatewayMsg = new GatewayInboundMsg()
             {
@@ -65,7 +65,7 @@ namespace MiniBus.ClientApi
                 Exchange = def.Exchange,
                 RoutingKey = def.Name,
                 MessageName = def.Name,
-                Message = env.Message
+                Message = msg
             };
 
             this.tlvClient.SendMessage( gatewayMsg );
@@ -85,10 +85,9 @@ namespace MiniBus.ClientApi
             var env = new Envelope()
             {
                 CorrelationId = context.ConversationId.ToString( "B" ),
-                Message = msg,
             };
 
-            SendMessage( env );
+            SendMessage( env, msg );
         }
 
         private void TlvClient_Received( ITlvContract msg )

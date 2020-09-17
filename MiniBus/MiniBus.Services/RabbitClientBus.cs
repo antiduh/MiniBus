@@ -45,18 +45,18 @@ namespace MiniBus.Services
             this.channel.BasicConsume( this.privateQueueName, true, this.rabbitConsumer );
         }
 
-        public void SendMessage( Envelope envelope )
+        public void SendMessage( Envelope env, IMessage msg )
         {
-            MessageDef msgDef = this.msgReg.Get( envelope.Message );
+            MessageDef msgDef = this.msgReg.Get( msg );
 
-            SendMessageInternal( envelope, msgDef, msgDef.Exchange, msgDef.Name );
+            SendMessageInternal( env, msg, msgDef, msgDef.Exchange, msgDef.Name );
         }
 
-        public void SendMessage( Envelope envelope, string exchange, string routingKey )
+        public void SendMessage( Envelope env, IMessage msg, string exchange, string routingKey )
         {
-            MessageDef msgDef = this.msgReg.Get( envelope.Message );
+            MessageDef msgDef = this.msgReg.Get( msg );
 
-            SendMessageInternal( envelope, msgDef, exchange, routingKey );
+            SendMessageInternal( env, msg, msgDef, exchange, routingKey );
         }
 
         public void EventHandler<T>( Action<T> handler ) where T : IMessage, new()
@@ -97,7 +97,7 @@ namespace MiniBus.Services
             return context;
         }
 
-        private void SendMessageInternal( Envelope envelope, MessageDef msgDef, string exchange, string routingKey )
+        private void SendMessageInternal( Envelope envelope, IMessage msg, MessageDef msgDef, string exchange, string routingKey )
         {
             var props = this.channel.CreateBasicProperties();
 
@@ -118,7 +118,7 @@ namespace MiniBus.Services
 
             lock( this.tlvWriter )
             {
-                this.tlvWriter.Write( envelope.Message );
+                this.tlvWriter.Write( msg );
                 this.channel.BasicPublish( exchange, routingKey, props, this.tlvWriter.GetBuffer() );
                 this.tlvWriter.Reset();
             }
@@ -241,18 +241,17 @@ namespace MiniBus.Services
             {
                 Envelope env = new Envelope()
                 {
-                    Message = msg,
                     SendRepliesTo = bus.privateQueueName,
                     CorrelationId = this.ConversationId.ToString( "B" )
                 };
 
                 if( this.redirectQueue == null )
                 {
-                    bus.SendMessage( env );
+                    bus.SendMessage( env, msg );
                 }
                 else
                 {
-                    bus.SendMessage( env, "", this.redirectQueue );
+                    bus.SendMessage( env, msg, "", this.redirectQueue );
                 }
             }
 
