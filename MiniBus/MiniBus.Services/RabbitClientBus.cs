@@ -235,6 +235,8 @@ namespace MiniBus.Services
                 {
                     this.inQueue.Take();
                 }
+
+                this.bus.requestContextPool.Return( this );
             }
 
             public void SendRequest( IMessage msg )
