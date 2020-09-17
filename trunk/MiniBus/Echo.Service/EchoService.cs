@@ -37,14 +37,11 @@ namespace Echo.Service
 
         private void VoidCallingHandler( object state )
         {
-            var env = new Envelope()
-            {
-                Message = new CallingVoidEvent() { Message = "Call of the Void" }
-            };
+            var msg = new CallingVoidEvent() { Message = "Call of the Void" };
 
             try
             {
-                this.bus.SendMessage( env );
+                this.bus.SendMessage( new Envelope(), msg );
             }
             catch( Exception e )
             {

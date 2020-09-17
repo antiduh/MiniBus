@@ -11,7 +11,5 @@
         /// Optionally specifies a specific routing key to direct message replies to; ignored by client transports.
         /// </summary>
         public string SendRepliesTo { get; set; }
-
-        public IMessage Message { get; set; }
     }
 }
