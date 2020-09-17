@@ -30,17 +30,24 @@ namespace Demo
 
         private static void GatewayDemo()
         {
-            using( var conn = new RabbitConn() )
+            using( var rabbitConn = new RabbitConn() )
             {
+                // |<------ Client Domain----->|<---------- Rabbit Domain ------------------------->|
+                // |                           |                                                    |
+                // EchoClient ---TCP---> GatewayService ---AMQP---> RabbitMQ Cluster ---> EchoService
+
+                // -- Echo Service ---
+                var echoService = new EchoService( 0 );
+                echoService.Connect( new RabbitServerBus( rabbitConn.Connect() ) );
+
+                // --- Gateway ---
                 GatewayService gatewayService = new GatewayService( 10001 );
-                gatewayService.Connect( conn.Connect() );
+                gatewayService.Connect( rabbitConn.Connect() );
 
                 GatewayClientBus clientBus = new GatewayClientBus( "localhost", 10001 );
                 clientBus.Connect();
 
-                var echoService = new EchoService( 0 );
-                echoService.Connect( new RabbitServerBus( conn.Connect() ) );
-
+                // --- Echo Client ---
                 EchoClient echoClient = new EchoClient( clientBus );
 
                 echoClient.DoEcho( "Hello" );
