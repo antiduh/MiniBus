@@ -35,18 +35,16 @@ namespace Demo
                 GatewayService gatewayService = new GatewayService( 10001 );
                 gatewayService.Connect( conn.Connect() );
 
-                GatewayClientBus client = new GatewayClientBus( "localhost", 10001 );
-                client.Connect();
+                GatewayClientBus clientBus = new GatewayClientBus( "localhost", 10001 );
+                clientBus.Connect();
 
                 var echoService = new EchoService( 0 );
                 echoService.Connect( new RabbitServerBus( conn.Connect() ) );
 
-                var req = client.StartRequest();
-                client.DeclareMessage<EchoReply>();
-                req.SendRequest( new EchoRequest() { EchoMsg = "Hello" } );
-                
-                var response = req.WaitResponse<EchoReply>( TimeSpan.FromSeconds( 5000.0 ) );
-                Console.WriteLine( "Gateway demo complete. Echo response: " + response.EchoMsg );
+                EchoClient echoClient = new EchoClient( clientBus );
+
+                echoClient.DoEcho( "Hello" );
+                Console.WriteLine( "Gateway demo complete." );
 
                 Thread.Sleep( 10 * 1000 );
             }
