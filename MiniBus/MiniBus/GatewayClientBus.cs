@@ -21,7 +21,6 @@ namespace MiniBus.ClientApi
 
         private Dictionary<Guid, GatewayRequestContext> pendingConversations;
 
-
         public GatewayClientBus( string hostname, int port )
         {
             this.hostname = hostname ?? throw new ArgumentNullException( nameof( hostname ) );
@@ -39,6 +38,7 @@ namespace MiniBus.ClientApi
             this.tlvClient = new TlvClient( this.socket.GetStream() );
             this.tlvClient.Register<GatewayOutboundMsg>();
             this.tlvClient.Register<GatewayHeartbeatResponse>();
+            this.tlvClient.Register<EventAddResponse>();
             this.tlvClient.Received += TlvClient_Received;
             this.tlvClient.Start();
         }
@@ -51,9 +51,20 @@ namespace MiniBus.ClientApi
 
         public void EventHandler<T>( Action<T> handler ) where T : IMessage, new()
         {
-            // TODO Wait until events are implemented
-            //throw new NotImplementedException();
-        }
+            var msgDef = this.msgDefs.Get<T>();
+
+            var addRequest = new EventAddRequest( msgDef.Exchange, msgDef.Name );
+
+            using( IRequestContext request = StartRequest() )
+            {
+
+                request.SendRequest( addRequest );
+
+            }
+
+                // TODO Wait until events are implemented
+                //throw new NotImplementedException();
+            }
 
         public void SendMessage( Envelope env, IMessage msg )
         {
@@ -112,6 +123,16 @@ namespace MiniBus.ClientApi
             }
 
             Console.WriteLine( "Gateway client received: " + msg );
+        }
+
+        private class Conversation
+        {
+            public Conversation()
+            {
+                this.ConversationId = Guid.NewGuid().ToString( "B" );
+            }
+
+            public string ConversationId { get; private set; }
         }
 
         private class GatewayRequestContext : IRequestContext
