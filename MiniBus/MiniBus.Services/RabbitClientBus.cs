@@ -18,7 +18,6 @@ namespace MiniBus.Services
         private ObjectPool<RabbitRequestContext> requestContextPool;
 
         private Dictionary<Guid, RabbitRequestContext> pendingConversations;
-        private readonly Dictionary<string, IEventRegistration> eventHandlers;
 
         private TlvBufferWriter tlvWriter;
         private TlvBufferReader tlvReader;
@@ -28,7 +27,6 @@ namespace MiniBus.Services
             this.channel = channel;
 
             this.knownExchanges = new HashSet<string>();
-            this.eventHandlers = new Dictionary<string, IEventRegistration>();
 
             this.requestContextPool = new ObjectPool<RabbitRequestContext>( () => new RabbitRequestContext( this ) );
             this.pendingConversations = new Dictionary<Guid, RabbitRequestContext>();
@@ -57,26 +55,6 @@ namespace MiniBus.Services
             MessageDef msgDef = this.msgReg.Get( msg );
 
             SendMessageInternal( env, msg, msgDef, exchange, routingKey );
-        }
-
-        public void EventHandler<T>( Action<T> handler ) where T : IMessage, new()
-        {
-            MessageDef msgDef = this.msgReg.Get<T>();
-
-            this.tlvReader.RegisterContract<T>();
-
-            // - Make sure the exchange exists
-            // - Bind the routing key to our private queue.
-
-            this.eventHandlers.Add( msgDef.Name, new EventRegistration<T>( handler ) );
-
-            if( knownExchanges.Contains( msgDef.Exchange ) == false )
-            {
-                this.channel.ExchangeDeclare( msgDef.Exchange, "topic", true, false );
-                this.knownExchanges.Add( msgDef.Exchange );
-            }
-
-            this.channel.QueueBind( this.privateQueueName, msgDef.Exchange, msgDef.Name );
         }
 
         public void DeclareMessage<T>() where T : IMessage, new()
@@ -143,8 +121,7 @@ namespace MiniBus.Services
                 SendRepliesTo = e.BasicProperties.ReplyTo,
             };
 
-            if( TryDispatchConversation( env, msg ) == false &&
-                TryDispatchEvent( msgName, msg ) == false )
+            if( TryDispatchConversation( env, msg ) == false )
             {
                 Console.WriteLine( $"Client Failure: No handler registered for message {msgName}." );
             }
@@ -166,39 +143,6 @@ namespace MiniBus.Services
             }
 
             return result;
-        }
-
-        private bool TryDispatchEvent( string msgName, IMessage msg )
-        {
-            bool result = false;
-
-            if( this.eventHandlers.TryGetValue( msgName, out IEventRegistration eventReg ) )
-            {
-                eventReg.Deliver( msg );
-                result = true;
-            }
-
-            return result;
-        }
-
-        private interface IEventRegistration
-        {
-            void Deliver( IMessage rawMsg );
-        }
-
-        private class EventRegistration<T> : IEventRegistration where T : IMessage, new()
-        {
-            private readonly Action<T> handler;
-
-            public EventRegistration( Action<T> handler )
-            {
-                this.handler = handler;
-            }
-
-            public void Deliver( IMessage rawMsg )
-            {
-                this.handler.Invoke( (T)rawMsg );
-            }
         }
 
         // TODO rename or synchronize usage with variable names (pendingConversations).

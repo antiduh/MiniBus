@@ -12,10 +12,7 @@ namespace Echo.Client
         {
             this.bus = bus;
             this.bus.DeclareMessage<EchoReply>();
-            this.bus.EventHandler<CallingVoidEvent>( HandleCallingVoid );
         }
-
-        public event Action<string> CallOfTheVoid;
 
         public void DoEcho( string text )
         {
@@ -47,11 +44,6 @@ namespace Echo.Client
                     }
                 }
             }
-        }
-
-        private void HandleCallingVoid( CallingVoidEvent callingVoid )
-        {
-            this.CallOfTheVoid?.Invoke( callingVoid.Message );
         }
     }
 }
