@@ -38,7 +38,6 @@ namespace MiniBus.ClientApi
             this.tlvClient = new TlvClient( this.socket.GetStream() );
             this.tlvClient.Register<GatewayOutboundMsg>();
             this.tlvClient.Register<GatewayHeartbeatResponse>();
-            this.tlvClient.Register<EventAddResponse>();
             this.tlvClient.Received += TlvClient_Received;
             this.tlvClient.Start();
         }
@@ -48,23 +47,6 @@ namespace MiniBus.ClientApi
             this.msgDefs.Add<T>();
             this.tlvClient.Register<T>();
         }
-
-        public void EventHandler<T>( Action<T> handler ) where T : IMessage, new()
-        {
-            var msgDef = this.msgDefs.Get<T>();
-
-            var addRequest = new EventAddRequest( msgDef.Exchange, msgDef.Name );
-
-            using( IRequestContext request = StartRequest() )
-            {
-
-                request.SendRequest( addRequest );
-
-            }
-
-                // TODO Wait until events are implemented
-                //throw new NotImplementedException();
-            }
 
         public void SendMessage( Envelope env, IMessage msg )
         {

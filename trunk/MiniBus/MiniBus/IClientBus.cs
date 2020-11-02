@@ -9,8 +9,6 @@ namespace MiniBus
         IRequestContext StartRequest();
 
         void SendMessage( Envelope env, IMessage msg );
-
-        void EventHandler<T>( Action<T> handler ) where T : IMessage, new();
     }
 
     public interface IRequestContext : IDisposable

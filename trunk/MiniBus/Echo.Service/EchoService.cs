@@ -11,12 +11,9 @@ namespace Echo.Service
         private readonly int index;
         private IServerBus bus;
 
-        private Timer voidCallingTimer;
-
         public EchoService( int index )
         {
             this.index = index;
-            this.voidCallingTimer = new Timer( VoidCallingHandler, null, Timeout.Infinite, Timeout.Infinite );
         }
 
         public void Connect( IServerBus bus )
@@ -24,8 +21,6 @@ namespace Echo.Service
             this.bus = bus;
 
             this.bus.RegisterHandler<EchoRequest>( HandleEchoRequest, "voren.echo" );
-
-            this.voidCallingTimer.Change( TimeSpan.FromSeconds( 2 ), TimeSpan.FromSeconds( 2 ) );
         }
 
         private void HandleEchoRequest( EchoRequest request, IConsumeContext consumeContext )
@@ -33,20 +28,6 @@ namespace Echo.Service
             var opts = new ReplyOptions() { RedirectReplies = true };
 
             consumeContext.Reply( new EchoReply( request.EchoMsg ), opts );
-        }
-
-        private void VoidCallingHandler( object state )
-        {
-            var msg = new CallingVoidEvent() { Message = "Call of the Void" };
-
-            try
-            {
-                this.bus.SendMessage( new Envelope(), msg );
-            }
-            catch( Exception e )
-            {
-                Console.WriteLine( $"Service {index} - failed to publish timer." );
-            }
         }
     }
 }
