@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -8,9 +10,13 @@ namespace MiniBus.Services
 {
     public class RabbitClientBus : IClientBus
     {
+        private readonly ModelWithRecovery remodel;
         private readonly IModel channel;
+
         private readonly HashSet<string> knownExchanges;
+        
         private EventingBasicConsumer rabbitConsumer;
+        
         private string privateQueueName;
 
         private MsgDefRegistry msgReg;
@@ -22,9 +28,10 @@ namespace MiniBus.Services
         private TlvBufferWriter tlvWriter;
         private TlvBufferReader tlvReader;
 
-        public RabbitClientBus( IModel channel )
+        public RabbitClientBus( ModelWithRecovery remodel )
         {
-            this.channel = channel;
+            this.remodel = remodel;
+            this.channel = remodel.Model;
 
             this.knownExchanges = new HashSet<string>();
 
@@ -38,9 +45,9 @@ namespace MiniBus.Services
             this.rabbitConsumer = new EventingBasicConsumer( this.channel );
             this.rabbitConsumer.Received += DispatchReceivedRabbitMsg;
 
-            // Listen on an anonymous queue.
-            this.privateQueueName = this.channel.QueueDeclare().QueueName;
-            this.channel.BasicConsume( this.privateQueueName, true, this.rabbitConsumer );
+            this.remodel.RecoverySucceeded += Remodel_RecoverySucceeded;
+
+            ListenOnPrivateQueue();
         }
 
         public void SendMessage( Envelope env, IMessage msg )
@@ -96,9 +103,19 @@ namespace MiniBus.Services
 
             lock( this.tlvWriter )
             {
-                this.tlvWriter.Write( msg );
-                this.channel.BasicPublish( exchange, routingKey, props, this.tlvWriter.GetBuffer() );
-                this.tlvWriter.Reset();
+                try
+                {
+                    this.tlvWriter.Write( msg );
+                    this.channel.BasicPublish( exchange, routingKey, props, this.tlvWriter.GetBuffer() );
+                }
+                catch( Exception e )
+                {
+                    Console.WriteLine( "Channel crash" );
+                }
+                finally
+                {
+                   this.tlvWriter.Reset();
+                }
             }
         }
 
@@ -143,6 +160,27 @@ namespace MiniBus.Services
             }
 
             return result;
+        }
+
+        private void ListenOnPrivateQueue()
+        {
+            // Listen on an anonymous queue.
+            try
+            {
+                this.privateQueueName = this.channel.QueueDeclare().QueueName;
+                this.channel.BasicConsume( this.privateQueueName, true, this.rabbitConsumer );
+            }
+            catch( Exception e )
+            {
+                Console.WriteLine( "RabbitClientBus: Recovery failed." );
+            }
+        }
+
+        private void Remodel_RecoverySucceeded( object sender, EventArgs e )
+        {
+            Console.WriteLine( "RabbitClientBus: Reconnecting..." );
+            ListenOnPrivateQueue();
+            Console.WriteLine( "RabbitClientBus: Reconnecting... done." );
         }
 
         // TODO rename or synchronize usage with variable names (pendingConversations).
