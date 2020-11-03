@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -144,7 +143,7 @@ namespace Gateway.Service
             {
                 this.client = client;
                 this.parent = parent;
-                this.ClientId = Guid.NewGuid().ToString("B");
+                this.ClientId = Guid.NewGuid().ToString( "B" );
 
                 this.tlvSocket = new TlvClient( client.GetStream() );
                 this.tlvSocket.Register<GatewayInboundMsg>();
