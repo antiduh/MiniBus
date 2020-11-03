@@ -183,11 +183,14 @@ namespace Gateway.Service
 
                     // We received a message from the client. Forward it to rabbit.
 
-                    Console.WriteLine( "Gateway received message: " );
-                    Console.WriteLine( " - Client UID:  " + this.ClientId );
-                    Console.WriteLine( " - RoutingKey:  " + msg.RoutingKey );
-                    Console.WriteLine( " - MessageName: " + msg.MessageName );
-                    Console.WriteLine();
+                    if( false )
+                    {
+                        Console.WriteLine( "Gateway received message: " );
+                        Console.WriteLine( " - Client UID:  " + this.ClientId );
+                        Console.WriteLine( " - RoutingKey:  " + msg.RoutingKey );
+                        Console.WriteLine( " - MessageName: " + msg.MessageName );
+                        Console.WriteLine();
+                    }
 
                     parent.PublishRabbit( msg, this );
                 }

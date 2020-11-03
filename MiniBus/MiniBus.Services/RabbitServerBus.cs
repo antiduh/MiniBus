@@ -9,6 +9,7 @@ namespace MiniBus.Services
     public class RabbitServerBus : IServerBus
     {
         private readonly IModel channel;
+        private readonly ModelWithRecovery remodel;
 
         private EventingBasicConsumer rabbitConsumer;
 
@@ -26,9 +27,10 @@ namespace MiniBus.Services
 
         private ObjectPool<RabbitConsumeContext> consumeContextPool;
 
-        public RabbitServerBus( IModel rabbit )
+        public RabbitServerBus( ModelWithRecovery remodel )
         {
-            this.channel = rabbit;
+            this.remodel = remodel;
+            this.channel = remodel.Model;
 
             this.knownExchanges = new HashSet<string>();
             this.handlers = new Dictionary<string, IHandlerRegistration>();
@@ -39,15 +41,15 @@ namespace MiniBus.Services
 
             this.consumeContextPool = new ObjectPool<RabbitConsumeContext>( () => new RabbitConsumeContext( this ) );
 
-            this.rabbitConsumer = new EventingBasicConsumer( rabbit );
+            this.rabbitConsumer = new EventingBasicConsumer( this.channel );
             this.rabbitConsumer.Received += DispatchReceivedRabbitMsg;
             this.rabbitConsumer.Shutdown += RabbitConsumer_Shutdown;
 
-            // Listen on a queue that's specific to this service instance.
-            this.privateQueueName = this.channel.QueueDeclare().QueueName;
-            this.channel.BasicConsume( this.privateQueueName, true, this.rabbitConsumer );
-        }
+            this.remodel.RecoverySucceeded += Remodel_RecoverySucceeded;
 
+            ListenOnPrivateQueue();
+        }
+        
         public void RegisterHandler<T>( Action<T, IConsumeContext> handler, string queueName ) where T : IMessage, new()
         {
             MessageDef def = this.msgReg.Get<T>();
@@ -164,6 +166,20 @@ namespace MiniBus.Services
             );
 
             this.channel.BasicConsume( queueName, true, this.rabbitConsumer );
+        }
+
+        private void ListenOnPrivateQueue()
+        {
+            // Listen on a queue that's specific to this service instance.
+            this.privateQueueName = this.channel.QueueDeclare().QueueName;
+            this.channel.BasicConsume( this.privateQueueName, true, this.rabbitConsumer );
+        }
+
+        private void Remodel_RecoverySucceeded( object sender, EventArgs e )
+        {
+            Console.Write( "RabbitServerBus: Reconnecting..." );
+            ListenOnPrivateQueue();
+            Console.Write( "RabbitServerBus: Reconnecting... done." );
         }
 
         private void RabbitConsumer_Shutdown( object sender, ShutdownEventArgs e )

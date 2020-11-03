@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Echo.Client.Messages;
 using MiniBus;
 
@@ -18,14 +19,28 @@ namespace Echo.Client
         {
             using( IRequestContext request = this.bus.StartRequest() )
             {
-                request.SendRequest( new EchoRequest( text ) );
 
-                var response = request.WaitResponse<EchoReply>( TimeSpan.FromSeconds( 5.0 ) );
-
-                if( response.EchoMsg != text )
+                while( true )
                 {
-                    throw new InvalidOperationException();
+                    try
+                    {
+                        request.SendRequest( new EchoRequest( text ) );
+                        var response = request.WaitResponse<EchoReply>( TimeSpan.FromSeconds( 5.0 ) );
+
+                        if( response.EchoMsg != text )
+                        {
+                            throw new InvalidOperationException();
+                        }
+
+                        break;
+                    }
+                    catch( TimeoutException e )
+                    {
+                        Console.WriteLine( "Timeout: retrying." );
+                        Thread.Sleep( 1000 );
+                    }
                 }
+
             }
         }
 

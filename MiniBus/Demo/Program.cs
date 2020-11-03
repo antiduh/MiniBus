@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Windows.Forms;
 using Echo.Client;
@@ -7,6 +8,7 @@ using Gateway.Service;
 using MiniBus.ClientApi;
 using MiniBus.Services;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 namespace Demo
 {
@@ -18,14 +20,15 @@ namespace Demo
         [STAThread]
         private static void Main()
         {
-            //RabbitBusDemo();
+            RabbitBusDemo();
 
-            GatewayDemo();
+            //GatewayDemo();
         }
 
         private static void GatewayDemo()
         {
-            using( var rabbitConn = new RabbitConn() )
+            using( var rabbitConnClient = new RabbitConn() )
+            using( var rabbitConnServer = new RabbitConn() )
             {
                 // |<------ Client Domain----->|<---------- Rabbit Domain ------------------------->|
                 // |                           |                                                    |
@@ -33,11 +36,11 @@ namespace Demo
 
                 // -- Echo Service ---
                 var echoService = new EchoService( 0 );
-                echoService.Connect( new RabbitServerBus( rabbitConn.Connect() ) );
+                echoService.Connect( new RabbitServerBus( rabbitConnClient.Connect() ) );
 
                 // --- Gateway ---
                 GatewayService gatewayService = new GatewayService( 10001 );
-                gatewayService.Connect( rabbitConn.Connect() );
+                //gatewayService.Connect( rabbitConnServer.Connect() );
 
                 GatewayClientBus clientBus = new GatewayClientBus( "localhost", 10001 );
                 clientBus.Connect();
@@ -45,7 +48,12 @@ namespace Demo
                 // --- Echo Client ---
                 EchoClient echoClient = new EchoClient( clientBus );
 
-                echoClient.DoEcho( "Hello" );
+                for( int i = 0; i < 1000; i++ )
+                {
+                    echoClient.DoEcho( "Hello" );
+                    Thread.Sleep( 1000 );
+                }
+
                 Console.WriteLine( "Gateway demo complete." );
 
                 Thread.Sleep( 10 * 1000 );
@@ -54,19 +62,20 @@ namespace Demo
 
         private static void RabbitBusDemo()
         {
-            using( var conn = new RabbitConn() )
+            using( var rabbitConnClient = new RabbitConn() )
+            using( var rabbitConnServer = new RabbitConn() )
             {
                 var service = new EchoService( 0 );
-                service.Connect( new RabbitServerBus( conn.Connect() ) );
+                service.Connect( new RabbitServerBus( rabbitConnServer.Connect() ) );
 
                 //var service2 = new EchoService( 1 );
                 //service2.Connect( new RabbitServerBus( conn.Connect() ) );
 
-                var client1 = new EchoClient( new RabbitClientBus( conn.Connect() ) );
+                var client1 = new EchoClient( new RabbitClientBus( rabbitConnClient.Connect() ) );
 
                 Console.WriteLine( "Demo starting." );
 
-                for( int i = 0; i < 60; i++ )
+                for( int i = 0; i < 100; i++ )
                 {
                     Thread.Sleep( 1000 );
                     client1.DoEcho( "Hello" );
@@ -84,34 +93,35 @@ namespace Demo
 
             private IConnection connection;
 
-            private IModel channel;
-
             public RabbitConn()
             {
                 this.rabbitConnFactory = new ConnectionFactory()
                 {
-                    HostName = "localhost",
+                    HostName = "127.0.0.1",
                     UserName = "guest",
                     Password = "guest",
                     VirtualHost = "sdv-test",
                     AutomaticRecoveryEnabled = true,
                     RequestedHeartbeat = TimeSpan.FromSeconds( 60 ),
+                    NetworkRecoveryInterval = TimeSpan.FromSeconds( 1 )
                 };
+
+                this.connection = rabbitConnFactory.CreateConnection();
             }
 
-            public IModel Connect()
+            public ModelWithRecovery Connect()
             {
-                this.connection = rabbitConnFactory.CreateConnection();
-                this.channel = this.connection.CreateModel();
-
-                return this.channel;
+                return new ModelWithRecovery( 
+                    this.connection.CreateModel(), 
+                    ( IAutorecoveringConnection)this.connection 
+                );
             }
 
             public void Dispose()
             {
-                this.channel.Dispose();
                 this.connection.Dispose();
             }
         }
+
     }
 }

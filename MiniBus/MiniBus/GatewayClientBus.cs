@@ -103,8 +103,6 @@ namespace MiniBus.ClientApi
             {
                 Console.WriteLine( $"Client Failure: No handler registered for message {gatewayMsg.MessageName}." );
             }
-
-            Console.WriteLine( "Gateway client received: " + msg );
         }
 
         private class Conversation
