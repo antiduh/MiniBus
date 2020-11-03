@@ -29,7 +29,7 @@ namespace MiniBus.Services
         public RabbitServerBus( IModel rabbit )
         {
             this.channel = rabbit;
-            
+
             this.knownExchanges = new HashSet<string>();
             this.handlers = new Dictionary<string, IHandlerRegistration>();
             this.msgReg = new MsgDefRegistry();
@@ -190,7 +190,7 @@ namespace MiniBus.Services
             public void Deliver( IMessage msg, string senderCorrId, string senderReplyTo, string clientId )
             {
                 var consumeContext = this.parent.consumeContextPool.Get();
-                
+
                 consumeContext.Load( senderCorrId, senderReplyTo, clientId );
                 this.handler.Invoke( (T)msg, consumeContext );
                 consumeContext.Unload();
@@ -205,7 +205,7 @@ namespace MiniBus.Services
             private string senderCorrId;
             private string senderReplyTo;
             private string clientId;
-            
+
             public RabbitConsumeContext( RabbitServerBus parent )
             {
                 this.parent = parent;

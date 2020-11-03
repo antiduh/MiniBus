@@ -32,7 +32,7 @@ namespace MiniBus.ClientApi
 
         public void Connect()
         {
-            this.socket = new TcpClient(); 
+            this.socket = new TcpClient();
             this.socket.Connect( this.hostname, this.port );
 
             this.tlvClient = new TlvClient( this.socket.GetStream() );
@@ -135,7 +135,6 @@ namespace MiniBus.ClientApi
 
             public void Dispose()
             {
-                
             }
 
             public void SendRequest( IMessage msg )
@@ -176,6 +175,5 @@ namespace MiniBus.ClientApi
                 public ITlvContract Message { get; private set; }
             }
         }
-
     }
 }
