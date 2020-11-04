@@ -101,6 +101,7 @@ namespace MiniBus.Services
 
             props.MessageId = msgDef.Name;
 
+            // This lock serves to protect both the tlvWriter and the RabbitMQ IModel, since both are not thread-safe.
             lock( this.tlvWriter )
             {
                 try
@@ -151,11 +152,19 @@ namespace MiniBus.Services
             if( env.CorrelationId != null )
             {
                 Guid convo = new Guid( env.CorrelationId );
+                RabbitRequestContext requestContext;
 
-                if( this.pendingConversations.TryGetValue( convo, out RabbitRequestContext requestContext ) )
+                // Have to lock when inspecting our conversation map, but once the lookup is
+                // complete we can dispatch to the receive queue without locking since the receive
+                // queue is a concurrent queue.
+                lock( this.pendingConversations )
+                {
+                    result = this.pendingConversations.TryGetValue( convo, out requestContext );
+                }
+
+                if( result )
                 {
                     requestContext.DispatchMessage( env, msg );
-                    result = true;
                 }
             }
 
