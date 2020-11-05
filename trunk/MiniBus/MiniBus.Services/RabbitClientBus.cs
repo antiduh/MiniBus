@@ -69,11 +69,19 @@ namespace MiniBus.Services
 
         public IRequestContext StartRequest()
         {
-            var context = this.requestPool.Get();
+            RabbitRequestContext context;
+
+            lock( this.requestPool )
+            {
+                context = this.requestPool.Get();
+            }
 
             context.Initialize();
 
-            this.activeRequests.Add( context.ConversationId, context );
+            lock( this.activeRequests )
+            {
+                this.activeRequests.Add( context.ConversationId, context );
+            }
 
             return context;
         }
@@ -218,7 +226,10 @@ namespace MiniBus.Services
 
             public void Dispose()
             {
-                this.bus.activeRequests.Remove( this.ConversationId );
+                lock( this.bus.activeRequests )
+                {
+                    this.bus.activeRequests.Remove( this.ConversationId );
+                }
 
                 this.ConversationId = Guid.Empty;
                 this.redirectQueue = null;
@@ -228,7 +239,10 @@ namespace MiniBus.Services
                     this.inQueue.TryTake( out _ );
                 }
 
-                this.bus.requestPool.Return( this );
+                lock( this.bus.requestPool )
+                {
+                    this.bus.requestPool.Return( this );
+                }
             }
 
             public void SendRequest( IMessage msg )
