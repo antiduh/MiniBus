@@ -128,9 +128,15 @@ namespace MiniBus.Services
 
             lock( this.tlvReader )
             {
-                this.tlvReader.LoadBuffer( e.Body.ToArray() );
-                msg = (IMessage)this.tlvReader.ReadContract();
-                this.tlvReader.UnloadBuffer();
+                try
+                {
+                    this.tlvReader.LoadBuffer( e.Body.ToArray() );
+                    msg = (IMessage)this.tlvReader.ReadContract();
+                }
+                finally
+                {
+                    this.tlvReader.UnloadBuffer();
+                }
             }
 
             Envelope env = new Envelope()
@@ -226,6 +232,8 @@ namespace MiniBus.Services
                 {
                     this.inQueue.Take();
                 }
+
+                this.inQueue.Dispose();
 
                 this.bus.requestContextPool.Return( this );
             }
