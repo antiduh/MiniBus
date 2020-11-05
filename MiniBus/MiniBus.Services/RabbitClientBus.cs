@@ -21,9 +21,9 @@ namespace MiniBus.Services
 
         private MsgDefRegistry msgReg;
 
-        private ObjectPool<RabbitRequestContext> requestContextPool;
+        private ObjectPool<RabbitRequestContext> requestPool;
 
-        private Dictionary<Guid, RabbitRequestContext> pendingConversations;
+        private Dictionary<Guid, RabbitRequestContext> activeRequests;
 
         private TlvBufferWriter tlvWriter;
         private TlvBufferReader tlvReader;
@@ -35,8 +35,8 @@ namespace MiniBus.Services
 
             this.knownExchanges = new HashSet<string>();
 
-            this.requestContextPool = new ObjectPool<RabbitRequestContext>( () => new RabbitRequestContext( this ) );
-            this.pendingConversations = new Dictionary<Guid, RabbitRequestContext>();
+            this.requestPool = new ObjectPool<RabbitRequestContext>( () => new RabbitRequestContext( this ) );
+            this.activeRequests = new Dictionary<Guid, RabbitRequestContext>();
             this.msgReg = new MsgDefRegistry();
 
             this.tlvWriter = new TlvBufferWriter();
@@ -73,11 +73,11 @@ namespace MiniBus.Services
 
         public IRequestContext StartRequest()
         {
-            var context = this.requestContextPool.Get();
+            var context = this.requestPool.Get();
 
             context.Initialize();
 
-            this.pendingConversations.Add( context.ConversationId, context );
+            this.activeRequests.Add( context.ConversationId, context );
 
             return context;
         }
@@ -163,9 +163,9 @@ namespace MiniBus.Services
                 // Have to lock when inspecting our conversation map, but once the lookup is
                 // complete we can dispatch to the receive queue without locking since the receive
                 // queue is a concurrent queue.
-                lock( this.pendingConversations )
+                lock( this.activeRequests )
                 {
-                    result = this.pendingConversations.TryGetValue( convo, out requestContext );
+                    result = this.activeRequests.TryGetValue( convo, out requestContext );
                 }
 
                 if( result )
@@ -198,7 +198,6 @@ namespace MiniBus.Services
             Console.WriteLine( "RabbitClientBus: Reconnecting... done." );
         }
 
-        // TODO rename or synchronize usage with variable names (pendingConversations).
         private class RabbitRequestContext : IRequestContext
         {
             private readonly RabbitClientBus bus;
@@ -223,7 +222,7 @@ namespace MiniBus.Services
 
             public void Dispose()
             {
-                this.bus.pendingConversations.Remove( this.ConversationId );
+                this.bus.activeRequests.Remove( this.ConversationId );
 
                 this.ConversationId = Guid.Empty;
                 this.redirectQueue = null;
@@ -235,7 +234,7 @@ namespace MiniBus.Services
 
                 this.inQueue.Dispose();
 
-                this.bus.requestContextPool.Return( this );
+                this.bus.requestPool.Return( this );
             }
 
             public void SendRequest( IMessage msg )
