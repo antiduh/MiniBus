@@ -229,7 +229,7 @@ namespace MiniBus.Services
 
                 while( this.inQueue.Count > 0 )
                 {
-                    this.inQueue.Take();
+                    this.inQueue.TryTake( out _ );
                 }
 
                 this.bus.requestPool.Return( this );
