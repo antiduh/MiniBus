@@ -13,8 +13,6 @@ namespace MiniBus.Services
         private readonly ModelWithRecovery remodel;
         private readonly IModel channel;
 
-        private readonly HashSet<string> knownExchanges;
-        
         private EventingBasicConsumer rabbitConsumer;
         
         private string privateQueueName;
@@ -32,8 +30,6 @@ namespace MiniBus.Services
         {
             this.remodel = remodel;
             this.channel = remodel.Model;
-
-            this.knownExchanges = new HashSet<string>();
 
             this.requestPool = new ObjectPool<RabbitRequestContext>( () => new RabbitRequestContext( this ) );
             this.activeRequests = new Dictionary<Guid, RabbitRequestContext>();
