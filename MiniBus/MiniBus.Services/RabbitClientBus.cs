@@ -232,8 +232,6 @@ namespace MiniBus.Services
                     this.inQueue.Take();
                 }
 
-                this.inQueue.Dispose();
-
                 this.bus.requestPool.Return( this );
             }
 
