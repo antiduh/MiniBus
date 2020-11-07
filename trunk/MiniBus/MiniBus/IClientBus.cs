@@ -18,5 +18,7 @@ namespace MiniBus
         IMessage WaitResponse( TimeSpan timeout );
 
         T WaitResponse<T>( TimeSpan timeout ) where T : IMessage, new();
+        
+        void WithRetry( Action action );
     }
 }

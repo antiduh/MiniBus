@@ -75,11 +75,11 @@ namespace Demo
 
                 Console.WriteLine( "Demo starting." );
 
-                for( int i = 0; i < 100; i++ )
+                for( int i = 0; i < 1000; i++ )
                 {
-                    Thread.Sleep( 1000 );
                     client1.DoEcho( "Hello" );
                     Console.WriteLine( "EchoClient: Echo complete." );
+                    Thread.Sleep( 1000 );
                 }
             }
 

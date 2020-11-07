@@ -19,28 +19,19 @@ namespace Echo.Client
         {
             using( IRequestContext request = this.bus.StartRequest() )
             {
-
-                while( true )
+                try
                 {
-                    try
+                    request.WithRetry( () =>
                     {
                         request.SendRequest( new EchoRequest( text ) );
                         var response = request.WaitResponse<EchoReply>( TimeSpan.FromSeconds( 5.0 ) );
-
-                        if( response.EchoMsg != text )
-                        {
-                            throw new InvalidOperationException();
-                        }
-
-                        break;
-                    }
-                    catch( TimeoutException e )
-                    {
-                        Console.WriteLine( "Timeout: retrying." );
-                        Thread.Sleep( 1000 );
-                    }
+                    } );
                 }
-
+                catch
+                {
+                    Console.WriteLine( "Echo command failed" );
+                    throw;
+                }
             }
         }
 
