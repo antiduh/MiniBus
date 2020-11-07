@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using RabbitMQ.Client;
@@ -281,6 +282,34 @@ namespace MiniBus.Services
                     throw new InvalidOperationException(
                         $"Received unexpected message '{msg.GetType()}'."
                     );
+                }
+            }
+
+            public void WithRetry( Action action )
+            {
+                ExceptionDispatchInfo failure = null;
+
+                for( int i = 0; i < 5; i++ )
+                {
+                    try
+                    {
+                        action();
+                        failure = null;
+
+                        break;
+                    }
+                    catch( Exception e )
+                    {
+                        Console.WriteLine( $"Request crashed: {e.Message}. Retrying.." );
+                        failure = ExceptionDispatchInfo.Capture( e );
+
+                        Thread.Sleep( 1000 );
+                    }
+                }
+
+                if( failure != null )
+                {
+                    failure.Throw();
                 }
             }
 

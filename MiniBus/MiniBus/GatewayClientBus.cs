@@ -2,6 +2,8 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using System.Runtime.ExceptionServices;
+using System.Threading;
 using MiniBus.ClientApi.Gateway;
 using MiniBus.Gateway;
 using PocketTlv;
@@ -153,6 +155,32 @@ namespace MiniBus.ClientApi
                 }
 
                 return dispatch.Message.Resolve<T>();
+            }
+
+            public void WithRetry( Action action )
+            {
+                ExceptionDispatchInfo failure = null;
+
+                for( int i = 0; i < 5; i++ )
+                {
+                    try
+                    {
+                        action();
+                        failure = null;
+
+                        break;
+                    }
+                    catch( Exception e )
+                    {
+                        failure = ExceptionDispatchInfo.Capture( e );
+                        Thread.Sleep( 1000 );
+                    }
+                }
+
+                if( failure != null )
+                {
+                    failure.Throw();
+                }
             }
 
             internal void DispatchMessage( Envelope env, ITlvContract msg )
