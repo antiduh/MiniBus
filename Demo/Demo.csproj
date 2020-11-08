@@ -93,8 +93,8 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\TlvDemo\PocketTlv\PocketTlv.csproj">
-      <Project>{81B9793C-696F-4DE6-A045-86077DACF543}</Project>
+    <ProjectReference Include="..\..\PocketTlv\PocketTlv\PocketTlv.csproj">
+      <Project>{81b9793c-696f-4de6-a045-86077dacf543}</Project>
       <Name>PocketTlv</Name>
     </ProjectReference>
     <ProjectReference Include="..\Echo.Client\Echo.Client.csproj">
