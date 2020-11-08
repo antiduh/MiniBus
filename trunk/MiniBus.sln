@@ -15,7 +15,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo", "Demo\Demo.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gateway.Service", "Gateway.Service\Gateway.Service.csproj", "{2BCBC823-0B04-461E-BC02-467815E38C64}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PocketTlv", "..\TlvDemo\PocketTlv\PocketTlv.csproj", "{81B9793C-696F-4DE6-A045-86077DACF543}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PocketTlv", "..\PocketTlv\PocketTlv\PocketTlv.csproj", "{81B9793C-696F-4DE6-A045-86077DACF543}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
