@@ -20,7 +20,7 @@ namespace MiniBus.Services
 
         private MsgDefRegistry msgReg;
 
-        private ObjectPool<RabbitRequestContext> requestPool;
+        private ConcurrentObjectPool<RabbitRequestContext> requestPool;
 
         private Dictionary<Guid, RabbitRequestContext> activeRequests;
 
@@ -32,7 +32,7 @@ namespace MiniBus.Services
             this.remodel = remodel;
             this.channel = remodel.Model;
 
-            this.requestPool = new ObjectPool<RabbitRequestContext>( () => new RabbitRequestContext( this ) );
+            this.requestPool = new ConcurrentObjectPool<RabbitRequestContext>( () => new RabbitRequestContext( this ) );
             this.activeRequests = new Dictionary<Guid, RabbitRequestContext>();
             this.msgReg = new MsgDefRegistry();
 
@@ -72,10 +72,7 @@ namespace MiniBus.Services
         {
             RabbitRequestContext context;
 
-            lock( this.requestPool )
-            {
-                context = this.requestPool.Get();
-            }
+            context = this.requestPool.Get();
 
             context.Initialize();
 
@@ -240,10 +237,7 @@ namespace MiniBus.Services
                     this.inQueue.TryTake( out _ );
                 }
 
-                lock( this.bus.requestPool )
-                {
-                    this.bus.requestPool.Return( this );
-                }
+                this.bus.requestPool.Return( this );
             }
 
             public void SendRequest( IMessage msg )

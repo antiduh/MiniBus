@@ -25,7 +25,7 @@ namespace MiniBus.Services
 
         private TlvBufferWriter tlvWriter;
 
-        private ObjectPool<RabbitConsumeContext> consumeContextPool;
+        private ConcurrentObjectPool<RabbitConsumeContext> consumeContextPool;
 
         public RabbitServerBus( ModelWithRecovery remodel )
         {
@@ -39,7 +39,7 @@ namespace MiniBus.Services
             this.tlvReader = new TlvBufferReader();
             this.tlvWriter = new TlvBufferWriter();
 
-            this.consumeContextPool = new ObjectPool<RabbitConsumeContext>( () => new RabbitConsumeContext( this ) );
+            this.consumeContextPool = new ConcurrentObjectPool<RabbitConsumeContext>( () => new RabbitConsumeContext( this ) );
 
             this.rabbitConsumer = new EventingBasicConsumer( this.channel );
             this.rabbitConsumer.Received += DispatchReceivedRabbitMsg;
@@ -205,7 +205,10 @@ namespace MiniBus.Services
 
             public void Deliver( IMessage msg, string senderCorrId, string senderReplyTo, string clientId )
             {
-                var consumeContext = this.parent.consumeContextPool.Get();
+                RabbitConsumeContext consumeContext;
+                
+
+                consumeContext = this.parent.consumeContextPool.Get();
 
                 consumeContext.Load( senderCorrId, senderReplyTo, clientId );
                 this.handler.Invoke( (T)msg, consumeContext );
