@@ -54,7 +54,7 @@ namespace Gateway.Service
             this.listenThread.Start();
         }
 
-        private void PublishRabbit( GatewayRequest msg, GatewayClient client )
+        private void PublishRabbit( GatewayRequestMsg msg, GatewayClient client )
         {
             // To forward to rabbit, we need to know the message parameters.
             // - What is the message name (routing key)?
@@ -98,7 +98,7 @@ namespace Gateway.Service
                 this.tlvReader.UnloadBuffer();
             }
 
-            var outboundMsg = new GatewayResponse()
+            var outboundMsg = new GatewayResponseMsg()
             {
                 CorrelationId = e.BasicProperties.CorrelationId,
                 MessageName = e.BasicProperties.MessageId,
@@ -146,7 +146,7 @@ namespace Gateway.Service
                 this.ClientId = Guid.NewGuid().ToString( "B" );
 
                 this.tlvSocket = new TlvClient( client.GetStream() );
-                this.tlvSocket.Register<GatewayRequest>();
+                this.tlvSocket.Register<GatewayRequestMsg>();
                 this.tlvSocket.Register<GatewayHeartbeatRequest>();
                 this.tlvSocket.Received += Socket_Received;
             }
@@ -175,7 +175,7 @@ namespace Gateway.Service
                 }
                 else
                 {
-                    GatewayRequest msg;
+                    GatewayRequestMsg msg;
                     if( tlvContract.TryResolve( out msg ) == false )
                     {
                         return;

@@ -6,7 +6,7 @@ namespace MiniBus.ClientApi.Gateway
     /// <summary>
     /// Represents a message being sent from the gateway service to a client.
     /// </summary>
-    public class GatewayResponse : IMessage
+    public class GatewayResponseMsg : IMessage
     {
         public string CorrelationId { get; set; }
 
