@@ -38,7 +38,7 @@ namespace MiniBus.ClientApi
             this.socket.Connect( this.hostname, this.port );
 
             this.tlvClient = new TlvClient( this.socket.GetStream() );
-            this.tlvClient.Register<GatewayOutboundMsg>();
+            this.tlvClient.Register<GatewayResponse>();
             this.tlvClient.Register<GatewayHeartbeatResponse>();
             this.tlvClient.Received += TlvClient_Received;
             this.tlvClient.Start();
@@ -54,7 +54,7 @@ namespace MiniBus.ClientApi
         {
             MessageDef def = this.msgDefs.Get( msg );
 
-            var gatewayMsg = new GatewayInboundMsg()
+            var gatewayMsg = new GatewayRequest()
             {
                 CorrelationId = env.CorrelationId,
                 Exchange = def.Exchange,
@@ -87,7 +87,7 @@ namespace MiniBus.ClientApi
 
         private void TlvClient_Received( ITlvContract msg )
         {
-            var gatewayMsg = msg.Resolve<GatewayOutboundMsg>();
+            var gatewayMsg = msg.Resolve<GatewayResponse>();
 
             Guid contextId = Guid.Parse( gatewayMsg.CorrelationId );
 
