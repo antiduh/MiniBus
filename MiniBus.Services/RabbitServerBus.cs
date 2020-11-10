@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using PocketTlv;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -50,7 +51,7 @@ namespace MiniBus.Services
             ListenOnPrivateQueue();
         }
         
-        public void RegisterHandler<T>( Action<T, IConsumeContext> handler, string queueName ) where T : IMessage, new()
+        public void RegisterHandler<T>( Action<T, IConsumeContext> handler, string queueName ) where T : ITlvContract, new()
         {
             MessageDef def = this.msgReg.Get<T>();
 
@@ -61,12 +62,12 @@ namespace MiniBus.Services
             ProvisionRabbitForMessageDef( def, queueName );
         }
 
-        public void SendMessage( Envelope envelope, IMessage msg )
+        public void SendMessage( Envelope envelope, ITlvContract msg )
         {
             SendMessage( envelope, msg, null, null, null );
         }
 
-        public void SendMessage( Envelope envelope, IMessage msg, string exchange, string routingKey, string clientId )
+        public void SendMessage( Envelope envelope, ITlvContract msg, string exchange, string routingKey, string clientId )
         {
             MessageDef msgDef = this.msgReg.Get( msg );
 
@@ -123,12 +124,12 @@ namespace MiniBus.Services
 
             if( this.handlers.TryGetValue( msgName, out IHandlerRegistration handler ) )
             {
-                IMessage msg;
+                ITlvContract msg;
 
                 lock( this.tlvReader )
                 {
                     this.tlvReader.LoadBuffer( e.Body.ToArray() );
-                    msg = (IMessage)this.tlvReader.ReadContract();
+                    msg = this.tlvReader.ReadContract();
                     this.tlvReader.UnloadBuffer();
                 }
 
@@ -189,10 +190,10 @@ namespace MiniBus.Services
 
         private interface IHandlerRegistration
         {
-            void Deliver( IMessage msg, string senderCorrId, string senderReplyTo, string clientId );
+            void Deliver( ITlvContract msg, string senderCorrId, string senderReplyTo, string clientId );
         }
 
-        private class HandlerRegistration<T> : IHandlerRegistration where T : IMessage, new()
+        private class HandlerRegistration<T> : IHandlerRegistration where T : ITlvContract, new()
         {
             private readonly RabbitServerBus parent;
             private readonly Action<T, IConsumeContext> handler;
@@ -203,7 +204,7 @@ namespace MiniBus.Services
                 this.handler = handler;
             }
 
-            public void Deliver( IMessage msg, string senderCorrId, string senderReplyTo, string clientId )
+            public void Deliver( ITlvContract msg, string senderCorrId, string senderReplyTo, string clientId )
             {
                 RabbitConsumeContext consumeContext;
                 
@@ -244,12 +245,12 @@ namespace MiniBus.Services
                 this.clientId = null;
             }
 
-            public void Reply( IMessage msg )
+            public void Reply( ITlvContract msg )
             {
                 Reply( msg, null );
             }
 
-            public void Reply( IMessage msg, ReplyOptions options )
+            public void Reply( ITlvContract msg, ReplyOptions options )
             {
                 Envelope replyEnv = new Envelope()
                 {

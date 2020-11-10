@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
+using PocketTlv;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -47,21 +48,21 @@ namespace MiniBus.Services
             ListenOnPrivateQueue();
         }
 
-        public void SendMessage( Envelope env, IMessage msg )
+        public void SendMessage( Envelope env, ITlvContract msg )
         {
             MessageDef msgDef = this.msgReg.Get( msg );
 
             SendMessageInternal( env, msg, msgDef, msgDef.Exchange, msgDef.Name );
         }
 
-        public void SendMessage( Envelope env, IMessage msg, string exchange, string routingKey )
+        public void SendMessage( Envelope env, ITlvContract msg, string exchange, string routingKey )
         {
             MessageDef msgDef = this.msgReg.Get( msg );
 
             SendMessageInternal( env, msg, msgDef, exchange, routingKey );
         }
 
-        public void DeclareMessage<T>() where T : IMessage, new()
+        public void DeclareMessage<T>() where T : ITlvContract, new()
         {
             this.msgReg.Add<T>();
 
@@ -84,7 +85,7 @@ namespace MiniBus.Services
             return context;
         }
 
-        private void SendMessageInternal( Envelope envelope, IMessage msg, MessageDef msgDef, string exchange, string routingKey )
+        private void SendMessageInternal( Envelope envelope, ITlvContract msg, MessageDef msgDef, string exchange, string routingKey )
         {
             var props = this.channel.CreateBasicProperties();
 
@@ -124,7 +125,7 @@ namespace MiniBus.Services
 
         private void DispatchReceivedRabbitMsg( object sender, BasicDeliverEventArgs e )
         {
-            IMessage msg;
+            ITlvContract msg;
 
             string msgName = e.BasicProperties.MessageId;
 
@@ -133,7 +134,7 @@ namespace MiniBus.Services
                 try
                 {
                     this.tlvReader.LoadBuffer( e.Body.ToArray() );
-                    msg = (IMessage)this.tlvReader.ReadContract();
+                    msg = this.tlvReader.ReadContract();
                 }
                 finally
                 {
@@ -153,7 +154,7 @@ namespace MiniBus.Services
             }
         }
 
-        private bool TryDispatchConversation( Envelope env, IMessage msg )
+        private bool TryDispatchConversation( Envelope env, ITlvContract msg )
         {
             bool result = false;
 
@@ -240,7 +241,7 @@ namespace MiniBus.Services
                 this.bus.requestPool.Return( this );
             }
 
-            public void SendRequest( IMessage msg )
+            public void SendRequest( ITlvContract msg )
             {
                 Envelope env = new Envelope()
                 {
@@ -258,14 +259,14 @@ namespace MiniBus.Services
                 }
             }
 
-            public IMessage WaitResponse( TimeSpan timeout )
+            public ITlvContract WaitResponse( TimeSpan timeout )
             {
                 return WaitResponseInternal( timeout );
             }
 
-            public T WaitResponse<T>( TimeSpan timeout ) where T : IMessage, new()
+            public T WaitResponse<T>( TimeSpan timeout ) where T : ITlvContract, new()
             {
-                IMessage msg = WaitResponseInternal( timeout );
+                ITlvContract msg = WaitResponseInternal( timeout );
 
                 if( msg is T casted )
                 {
@@ -307,12 +308,12 @@ namespace MiniBus.Services
                 }
             }
 
-            internal void DispatchMessage( Envelope env, IMessage msg )
+            internal void DispatchMessage( Envelope env, ITlvContract msg )
             {
                 this.inQueue.Add( new Dispatch( env, msg ) );
             }
 
-            private IMessage WaitResponseInternal( TimeSpan timeout )
+            private ITlvContract WaitResponseInternal( TimeSpan timeout )
             {
                 Dispatch dispatch;
 
@@ -332,7 +333,7 @@ namespace MiniBus.Services
 
             private struct Dispatch
             {
-                public Dispatch( Envelope envelope, IMessage message )
+                public Dispatch( Envelope envelope, ITlvContract message )
                 {
                     Envelope = envelope;
                     Message = message;
@@ -340,7 +341,7 @@ namespace MiniBus.Services
 
                 public Envelope Envelope { get; private set; }
 
-                public IMessage Message { get; private set; }
+                public ITlvContract Message { get; private set; }
             }
         }
     }

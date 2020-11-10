@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using PocketTlv;
 
 namespace MiniBus
 {
@@ -13,7 +14,7 @@ namespace MiniBus
             //return reader.ReadToEnd();
         }
 
-        public static byte[] MakeBody( IMessage message )
+        public static byte[] MakeBody( ITlvContract message )
         {
             return null;
             //string payload = message.Write();

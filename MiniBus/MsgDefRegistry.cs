@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using PocketTlv;
 
 namespace MiniBus
 {
@@ -28,7 +29,7 @@ namespace MiniBus
             this.messageMap = new Dictionary<Type, MessageDef>();
         }
 
-        public void Add<T>() where T : IMessage
+        public void Add<T>() where T : ITlvContract
         {
             Get<T>();
         }
@@ -38,7 +39,7 @@ namespace MiniBus
         /// </summary>
         /// <typeparam name="T">The message's type.</typeparam>
         /// <returns></returns>
-        public MessageDef Get<T>() where T : IMessage
+        public MessageDef Get<T>() where T : ITlvContract
         {
             return AddFromType( typeof( T ) );
         }
@@ -48,7 +49,7 @@ namespace MiniBus
         /// </summary>
         /// <param name="msg"></param>
         /// <returns></returns>
-        public MessageDef Get( IMessage msg )
+        public MessageDef Get( ITlvContract msg )
         {
             return AddFromType( msg.GetType() );
         }

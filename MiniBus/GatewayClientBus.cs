@@ -44,13 +44,13 @@ namespace MiniBus.ClientApi
             this.tlvClient.Start();
         }
 
-        public void DeclareMessage<T>() where T : IMessage, new()
+        public void DeclareMessage<T>() where T : ITlvContract, new()
         {
             this.msgDefs.Add<T>();
             this.tlvClient.Register<T>();
         }
 
-        public void SendMessage( Envelope env, IMessage msg )
+        public void SendMessage( Envelope env, ITlvContract msg )
         {
             MessageDef def = this.msgDefs.Get( msg );
 
@@ -75,7 +75,7 @@ namespace MiniBus.ClientApi
             return context;
         }
 
-        private void SendContextMsg( IMessage msg, GatewayRequestContext context )
+        private void SendContextMsg( ITlvContract msg, GatewayRequestContext context )
         {
             var env = new Envelope()
             {
@@ -127,17 +127,17 @@ namespace MiniBus.ClientApi
             {
             }
 
-            public void SendRequest( IMessage msg )
+            public void SendRequest( ITlvContract msg )
             {
                 this.parent.SendContextMsg( msg, this );
             }
 
-            public IMessage WaitResponse( TimeSpan timeout )
+            public ITlvContract WaitResponse( TimeSpan timeout )
             {
                 throw new NotImplementedException();
             }
 
-            public T WaitResponse<T>( TimeSpan timeout ) where T : IMessage, new()
+            public T WaitResponse<T>( TimeSpan timeout ) where T : ITlvContract, new()
             {
                 if( this.inQueue.TryTake( out Dispatch dispatch, timeout ) == false )
                 {

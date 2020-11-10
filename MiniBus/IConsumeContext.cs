@@ -1,9 +1,11 @@
-﻿namespace MiniBus
+﻿using PocketTlv;
+
+namespace MiniBus
 {
     public interface IConsumeContext
     {
-        void Reply( IMessage msg );
+        void Reply( ITlvContract msg );
 
-        void Reply( IMessage msg, ReplyOptions options );
+        void Reply( ITlvContract msg, ReplyOptions options );
     }
 }
