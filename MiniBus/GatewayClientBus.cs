@@ -107,16 +107,6 @@ namespace MiniBus.ClientApi
             }
         }
 
-        private class Conversation
-        {
-            public Conversation()
-            {
-                this.ConversationId = Guid.NewGuid().ToString( "B" );
-            }
-
-            public string ConversationId { get; private set; }
-        }
-
         private class GatewayRequestContext : IRequestContext
         {
             private readonly GatewayClientBus parent;
