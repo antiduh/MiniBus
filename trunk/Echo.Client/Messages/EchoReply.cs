@@ -5,7 +5,7 @@ using PocketTlv;
 namespace Echo.Client.Messages
 {
     [MsgName( "voren.echo.EchoReply", "voren-core" )]
-    public class EchoReply : IMessage
+    public class EchoReply : ITlvContract
     {
         public EchoReply() { }
 

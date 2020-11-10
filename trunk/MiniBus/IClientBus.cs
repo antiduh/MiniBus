@@ -1,23 +1,24 @@
 ﻿using System;
+using PocketTlv;
 
 namespace MiniBus
 {
     public interface IClientBus
     {
-        void DeclareMessage<T>() where T : IMessage, new();
+        void DeclareMessage<T>() where T : ITlvContract, new();
 
         IRequestContext StartRequest();
 
-        void SendMessage( Envelope env, IMessage msg );
+        void SendMessage( Envelope env, ITlvContract msg );
     }
 
     public interface IRequestContext : IDisposable
     {
-        void SendRequest( IMessage msg );
+        void SendRequest( ITlvContract msg );
 
-        IMessage WaitResponse( TimeSpan timeout );
+        ITlvContract WaitResponse( TimeSpan timeout );
 
-        T WaitResponse<T>( TimeSpan timeout ) where T : IMessage, new();
+        T WaitResponse<T>( TimeSpan timeout ) where T : ITlvContract, new();
         
         void WithRetry( Action action );
     }
