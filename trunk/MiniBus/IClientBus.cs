@@ -7,9 +7,13 @@ namespace MiniBus
     {
         void DeclareMessage<T>() where T : ITlvContract, new();
 
+        // TODO antiduh
+        void SendMessage( string corrId, ITlvContract msg );
+
         IRequestContext StartRequest();
 
-        void SendMessage( Envelope env, ITlvContract msg );
+        // TODO antiduh
+        IRequestContext StartRequest( string corrId );
     }
 
     public interface IRequestContext : IDisposable
@@ -21,5 +25,22 @@ namespace MiniBus
         T WaitResponse<T>( TimeSpan timeout ) where T : ITlvContract, new();
         
         void WithRetry( Action action );
+    }
+
+    public class ClientEnvelope
+    {
+        public ClientEnvelope()
+        {
+        }
+
+        public ClientEnvelope( string correlationId, string sendRepliesTo )
+        {
+            this.CorrelationId = correlationId;
+            this.SendRepliesTo = sendRepliesTo;
+        }
+
+        public string CorrelationId { get; set; }
+
+        public string SendRepliesTo { get; set; }
     }
 }

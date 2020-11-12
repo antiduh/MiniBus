@@ -23,7 +23,7 @@ namespace MiniBus.Services
 
         private ConcurrentObjectPool<RabbitRequestContext> requestPool;
 
-        private Dictionary<Guid, RabbitRequestContext> activeRequests;
+        private Dictionary<string, RabbitRequestContext> activeRequests;
 
         private TlvBufferWriter tlvWriter;
         private TlvBufferReader tlvReader;
@@ -34,7 +34,7 @@ namespace MiniBus.Services
             this.channel = remodel.Model;
 
             this.requestPool = new ConcurrentObjectPool<RabbitRequestContext>( () => new RabbitRequestContext( this ) );
-            this.activeRequests = new Dictionary<Guid, RabbitRequestContext>();
+            this.activeRequests = new Dictionary<string, RabbitRequestContext>();
             this.msgReg = new MsgDefRegistry();
 
             this.tlvWriter = new TlvBufferWriter();
@@ -48,20 +48,6 @@ namespace MiniBus.Services
             ListenOnPrivateQueue();
         }
 
-        public void SendMessage( Envelope env, ITlvContract msg )
-        {
-            MessageDef msgDef = this.msgReg.Get( msg );
-
-            SendMessageInternal( env, msg, msgDef, msgDef.Exchange, msgDef.Name );
-        }
-
-        public void SendMessage( Envelope env, ITlvContract msg, string exchange, string routingKey )
-        {
-            MessageDef msgDef = this.msgReg.Get( msg );
-
-            SendMessageInternal( env, msg, msgDef, exchange, routingKey );
-        }
-
         public void DeclareMessage<T>() where T : ITlvContract, new()
         {
             this.msgReg.Add<T>();
@@ -71,21 +57,48 @@ namespace MiniBus.Services
 
         public IRequestContext StartRequest()
         {
+            return StartRequest( null );
+        }
+
+        public IRequestContext StartRequest( string corrId )
+        {
             RabbitRequestContext context;
 
             context = this.requestPool.Get();
 
-            context.Initialize();
+            context.Initialize( corrId );
 
             lock( this.activeRequests )
             {
-                this.activeRequests.Add( context.ConversationId, context );
+                this.activeRequests.Add( context.CorrelationId, context );
             }
 
             return context;
         }
 
-        private void SendMessageInternal( Envelope envelope, ITlvContract msg, MessageDef msgDef, string exchange, string routingKey )
+        public void SendMessage( string correlationId, ITlvContract msg )
+        {
+            MessageDef msgDef = this.msgReg.Get( msg );
+            var envelope = new ClientEnvelope() { CorrelationId = correlationId };
+
+            SendMessageInternal( envelope, msg, msgDef, msgDef.Exchange, msgDef.Name );
+        }
+
+        private void SendMessage( ClientEnvelope env, ITlvContract msg )
+        {
+            MessageDef msgDef = this.msgReg.Get( msg );
+
+            SendMessageInternal( env, msg, msgDef, msgDef.Exchange, msgDef.Name );
+        }
+
+        private void SendMessage( ClientEnvelope env, ITlvContract msg, string exchange, string routingKey )
+        {
+            MessageDef msgDef = this.msgReg.Get( msg );
+
+            SendMessageInternal( env, msg, msgDef, exchange, routingKey );
+        }
+
+        private void SendMessageInternal( ClientEnvelope envelope, ITlvContract msg, MessageDef msgDef, string exchange, string routingKey )
         {
             var props = this.channel.CreateBasicProperties();
 
@@ -156,25 +169,25 @@ namespace MiniBus.Services
 
         private bool TryDispatchConversation( Envelope env, ITlvContract msg )
         {
-            bool result = false;
-
-            if( env.CorrelationId != null )
+            if( env.CorrelationId == null )
             {
-                Guid convo = new Guid( env.CorrelationId );
-                RabbitRequestContext requestContext;
+                throw new InvalidOperationException();
+            }
 
-                // Have to lock when inspecting our conversation map, but once the lookup is
-                // complete we can dispatch to the receive queue without locking since the receive
-                // queue is a concurrent queue.
-                lock( this.activeRequests )
-                {
-                    result = this.activeRequests.TryGetValue( convo, out requestContext );
-                }
+            RabbitRequestContext requestContext;
+            bool result;
 
-                if( result )
-                {
-                    requestContext.DispatchMessage( env, msg );
-                }
+            // Have to lock when inspecting our conversation map, but once the lookup is
+            // complete we can dispatch to the receive queue without locking since the receive
+            // queue is a concurrent queue.
+            lock( this.activeRequests )
+            {
+                result = this.activeRequests.TryGetValue( env.CorrelationId, out requestContext );
+            }
+
+            if( result )
+            {
+                requestContext.DispatchMessage( env, msg );
             }
 
             return result;
@@ -215,11 +228,19 @@ namespace MiniBus.Services
                 this.inQueue = new BlockingCollection<Dispatch>();
             }
 
-            public Guid ConversationId { get; private set; }
+            public string CorrelationId { get; private set; }
 
-            public void Initialize()
+            public void Initialize( string corrId = null )
             {
-                this.ConversationId = Guid.NewGuid();
+                if( corrId == null )
+                {
+                    this.CorrelationId = Guid.NewGuid().ToString( "B" );
+                }
+                else
+                {
+                    this.CorrelationId = corrId;
+                }
+
                 this.redirectQueue = null;
             }
 
@@ -227,10 +248,10 @@ namespace MiniBus.Services
             {
                 lock( this.bus.activeRequests )
                 {
-                    this.bus.activeRequests.Remove( this.ConversationId );
+                    this.bus.activeRequests.Remove( this.CorrelationId );
                 }
 
-                this.ConversationId = Guid.Empty;
+                this.CorrelationId = null;
                 this.redirectQueue = null;
 
                 while( this.inQueue.Count > 0 )
@@ -243,10 +264,10 @@ namespace MiniBus.Services
 
             public void SendRequest( ITlvContract msg )
             {
-                Envelope env = new Envelope()
+                var env = new ClientEnvelope() 
                 {
                     SendRepliesTo = bus.privateQueueName,
-                    CorrelationId = this.ConversationId.ToString( "B" )
+                    CorrelationId = this.CorrelationId
                 };
 
                 if( this.redirectQueue == null )

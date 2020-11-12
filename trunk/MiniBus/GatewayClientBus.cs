@@ -21,7 +21,7 @@ namespace MiniBus.ClientApi
 
         private MsgDefRegistry msgDefs;
 
-        private Dictionary<Guid, GatewayRequestContext> pendingConversations;
+        private Dictionary<string, GatewayRequestContext> pendingConversations;
 
         public GatewayClientBus( string hostname, int port )
         {
@@ -29,7 +29,7 @@ namespace MiniBus.ClientApi
             this.port = port;
 
             this.msgDefs = new MsgDefRegistry();
-            this.pendingConversations = new Dictionary<Guid, GatewayRequestContext>();
+            this.pendingConversations = new Dictionary<string, GatewayRequestContext>();
         }
 
         public void Connect()
@@ -50,7 +50,32 @@ namespace MiniBus.ClientApi
             this.tlvClient.Register<T>();
         }
 
-        public void SendMessage( Envelope env, ITlvContract msg )
+        public IRequestContext StartRequest()
+        {
+            return StartRequest( null );
+        }
+
+        public IRequestContext StartRequest( string corrId )
+        {
+            var context = new GatewayRequestContext( this, corrId );
+
+            this.pendingConversations.Add( context.ConversationId, context );
+
+            return context;
+        }
+
+
+        public void SendMessage( string corrId, ITlvContract msg )
+        {
+            var env = new ClientEnvelope()
+            {
+                CorrelationId = corrId
+            };
+
+            SendMessageInternal( env, msg );
+        }
+
+        private void SendMessageInternal( ClientEnvelope env, ITlvContract msg )
         {
             MessageDef def = this.msgDefs.Get( msg );
 
@@ -66,38 +91,17 @@ namespace MiniBus.ClientApi
             this.tlvClient.SendMessage( gatewayMsg );
         }
 
-        public IRequestContext StartRequest()
-        {
-            var context = new GatewayRequestContext( this );
-
-            this.pendingConversations.Add( context.ConversationId, context );
-
-            return context;
-        }
-
-        private void SendContextMsg( ITlvContract msg, GatewayRequestContext context )
-        {
-            var env = new Envelope()
-            {
-                CorrelationId = context.ConversationId.ToString( "B" ),
-            };
-
-            SendMessage( env, msg );
-        }
-
         private void TlvClient_Received( ITlvContract msg )
         {
             var gatewayMsg = msg.Resolve<GatewayResponseMsg>();
 
-            Guid contextId = Guid.Parse( gatewayMsg.CorrelationId );
-
-            Envelope env = new Envelope()
+            var env = new ClientEnvelope()
             {
                 CorrelationId = gatewayMsg.CorrelationId,
                 SendRepliesTo = gatewayMsg.SendRepliesTo,
             };
 
-            if( this.pendingConversations.TryGetValue( contextId, out GatewayRequestContext context ) )
+            if( this.pendingConversations.TryGetValue( gatewayMsg.CorrelationId, out GatewayRequestContext context ) )
             {
                 context.DispatchMessage( env, gatewayMsg.Message );
             }
@@ -113,15 +117,23 @@ namespace MiniBus.ClientApi
 
             private BlockingCollection<Dispatch> inQueue;
 
-            public GatewayRequestContext( GatewayClientBus parent )
+            public GatewayRequestContext( GatewayClientBus parent, string corrId = null )
             {
                 this.parent = parent;
 
-                this.ConversationId = Guid.NewGuid();
+                if( corrId == null )
+                {
+                    this.ConversationId = Guid.NewGuid().ToString( "B" );
+                }
+                else
+                {
+                    this.ConversationId = corrId;
+                }
+
                 this.inQueue = new BlockingCollection<Dispatch>();
             }
 
-            public Guid ConversationId { get; private set; }
+            public string ConversationId { get; private set; }
 
             public void Dispose()
             {
@@ -129,7 +141,12 @@ namespace MiniBus.ClientApi
 
             public void SendRequest( ITlvContract msg )
             {
-                this.parent.SendContextMsg( msg, this );
+                var env = new ClientEnvelope()
+                {
+                    CorrelationId = this.ConversationId
+                };
+
+                this.parent.SendMessageInternal( env, msg );
             }
 
             public ITlvContract WaitResponse( TimeSpan timeout )
@@ -173,20 +190,20 @@ namespace MiniBus.ClientApi
                 }
             }
 
-            internal void DispatchMessage( Envelope env, ITlvContract msg )
+            internal void DispatchMessage( ClientEnvelope env, ITlvContract msg )
             {
                 this.inQueue.Add( new Dispatch( env, msg ) );
             }
 
             private struct Dispatch
             {
-                public Dispatch( Envelope envelope, ITlvContract message )
+                public Dispatch( ClientEnvelope envelope, ITlvContract message )
                 {
                     Envelope = envelope;
                     Message = message;
                 }
 
-                public Envelope Envelope { get; private set; }
+                public ClientEnvelope Envelope { get; private set; }
 
                 public ITlvContract Message { get; private set; }
             }
