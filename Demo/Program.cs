@@ -20,9 +20,9 @@ namespace Demo
         [STAThread]
         private static void Main()
         {
-            RabbitBusDemo();
+            //RabbitBusDemo();
 
-            //GatewayDemo();
+            GatewayDemo();
         }
 
         private static void GatewayDemo()
@@ -40,7 +40,7 @@ namespace Demo
 
                 // --- Gateway ---
                 GatewayService gatewayService = new GatewayService( 10001 );
-                //gatewayService.Connect( rabbitConnServer.Connect() );
+                gatewayService.Connect( rabbitConnServer.Connect().Model );
 
                 GatewayClientBus clientBus = new GatewayClientBus( "localhost", 10001 );
                 clientBus.Connect();
@@ -51,6 +51,7 @@ namespace Demo
                 for( int i = 0; i < 1000; i++ )
                 {
                     echoClient.DoEcho( "Hello" );
+                    Console.WriteLine( "EchoClient: Echo complete." );
                     Thread.Sleep( 1000 );
                 }
 
