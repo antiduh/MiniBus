@@ -155,7 +155,7 @@ namespace MiniBus.Services
                 }
             }
 
-            Envelope env = new Envelope()
+            var env = new ClientEnvelope()
             {
                 CorrelationId = e.BasicProperties.CorrelationId,
                 SendRepliesTo = e.BasicProperties.ReplyTo,
@@ -167,7 +167,7 @@ namespace MiniBus.Services
             }
         }
 
-        private bool TryDispatchConversation( Envelope env, ITlvContract msg )
+        private bool TryDispatchConversation( ClientEnvelope env, ITlvContract msg )
         {
             if( env.CorrelationId == null )
             {
@@ -329,7 +329,7 @@ namespace MiniBus.Services
                 }
             }
 
-            internal void DispatchMessage( Envelope env, ITlvContract msg )
+            internal void DispatchMessage( ClientEnvelope env, ITlvContract msg )
             {
                 this.inQueue.Add( new Dispatch( env, msg ) );
             }
@@ -354,13 +354,13 @@ namespace MiniBus.Services
 
             private struct Dispatch
             {
-                public Dispatch( Envelope envelope, ITlvContract message )
+                public Dispatch( ClientEnvelope envelope, ITlvContract message )
                 {
                     Envelope = envelope;
                     Message = message;
                 }
 
-                public Envelope Envelope { get; private set; }
+                public ClientEnvelope Envelope { get; private set; }
 
                 public ITlvContract Message { get; private set; }
             }
