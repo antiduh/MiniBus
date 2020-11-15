@@ -116,6 +116,8 @@ namespace MiniBus.ClientApi
             private readonly GatewayClientBus parent;
 
             private BlockingCollection<Dispatch> inQueue;
+            
+            private string redirectQueue;
 
             public GatewayRequestContext( GatewayClientBus parent, string corrId = null )
             {
@@ -159,6 +161,11 @@ namespace MiniBus.ClientApi
                 if( this.inQueue.TryTake( out Dispatch dispatch, timeout ) == false )
                 {
                     throw new TimeoutException();
+                }
+
+                if( dispatch.Envelope.SendRepliesTo != null )
+                {
+                    this.redirectQueue = dispatch.Envelope.SendRepliesTo;
                 }
 
                 return dispatch.Message.Resolve<T>();
