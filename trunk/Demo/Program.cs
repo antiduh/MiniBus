@@ -110,9 +110,9 @@ namespace Demo
 
             public ModelWithRecovery Connect()
             {
-                return new ModelWithRecovery( 
-                    this.connection.CreateModel(), 
-                    ( IAutorecoveringConnection)this.connection 
+                return new ModelWithRecovery(
+                    this.connection.CreateModel(),
+                    (IAutorecoveringConnection)this.connection
                 );
             }
 
@@ -121,6 +121,5 @@ namespace Demo
                 this.connection.Dispose();
             }
         }
-
     }
 }

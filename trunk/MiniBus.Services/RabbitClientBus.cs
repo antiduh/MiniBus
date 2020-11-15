@@ -15,7 +15,7 @@ namespace MiniBus.Services
         private readonly IModel channel;
 
         private EventingBasicConsumer rabbitConsumer;
-        
+
         private string privateQueueName;
 
         private MsgDefRegistry msgReg;
@@ -130,7 +130,7 @@ namespace MiniBus.Services
                 }
                 finally
                 {
-                   this.tlvWriter.Reset();
+                    this.tlvWriter.Reset();
                 }
             }
         }
@@ -263,7 +263,7 @@ namespace MiniBus.Services
 
             public void SendRequest( ITlvContract msg )
             {
-                var env = new ClientEnvelope() 
+                var env = new ClientEnvelope()
                 {
                     SendRepliesTo = bus.privateQueueName,
                     CorrelationId = this.CorrelationId
