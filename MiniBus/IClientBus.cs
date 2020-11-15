@@ -23,7 +23,7 @@ namespace MiniBus
         ITlvContract WaitResponse( TimeSpan timeout );
 
         T WaitResponse<T>( TimeSpan timeout ) where T : ITlvContract, new();
-        
+
         void WithRetry( Action action );
     }
 

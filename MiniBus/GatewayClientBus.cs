@@ -63,7 +63,6 @@ namespace MiniBus
             return context;
         }
 
-
         public void SendMessage( string corrId, ITlvContract msg )
         {
             var env = new ClientEnvelope()
@@ -115,7 +114,7 @@ namespace MiniBus
             private readonly GatewayClientBus parent;
 
             private BlockingCollection<Dispatch> inQueue;
-            
+
             private string redirectQueue;
 
             public GatewayRequestContext( GatewayClientBus parent, string corrId = null )

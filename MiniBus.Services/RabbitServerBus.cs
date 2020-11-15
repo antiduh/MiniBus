@@ -50,7 +50,7 @@ namespace MiniBus.Services
 
             ListenOnPrivateQueue();
         }
-        
+
         public void RegisterHandler<T>( Action<T, IConsumeContext> handler, string queueName ) where T : ITlvContract, new()
         {
             MessageDef def = this.msgReg.Get<T>();
@@ -207,7 +207,6 @@ namespace MiniBus.Services
             public void Deliver( ITlvContract msg, string senderCorrId, string senderReplyTo, string clientId )
             {
                 RabbitConsumeContext consumeContext;
-                
 
                 consumeContext = this.parent.consumeContextPool.Get();
 
