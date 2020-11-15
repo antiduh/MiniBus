@@ -1,7 +1,7 @@
 ﻿using System;
 using PocketTlv;
 
-namespace MiniBus.ClientApi.Gateway
+namespace MiniBus.Gateway
 {
     /// <summary>
     /// Represents a message being sent from a client to the gateway service.

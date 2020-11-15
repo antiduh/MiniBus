@@ -1,7 +1,7 @@
 ﻿using System;
 using PocketTlv;
 
-namespace MiniBus.ClientApi.Gateway
+namespace MiniBus.Gateway
 {
     /// <summary>
     /// Used by a client to check that the connection to the gateway itself is still alive.

@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Windows.Forms;
 using Echo.Client;
 using Echo.Service;
 using Gateway.Service;
-using MiniBus.ClientApi;
+using MiniBus;
 using MiniBus.Services;
 using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 
 namespace Demo
 {

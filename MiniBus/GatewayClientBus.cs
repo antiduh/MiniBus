@@ -4,11 +4,10 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Runtime.ExceptionServices;
 using System.Threading;
-using MiniBus.ClientApi.Gateway;
 using MiniBus.Gateway;
 using PocketTlv;
 
-namespace MiniBus.ClientApi
+namespace MiniBus
 {
     public class GatewayClientBus : IClientBus
     {
