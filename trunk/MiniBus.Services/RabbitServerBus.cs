@@ -62,35 +62,18 @@ namespace MiniBus.Services
             ProvisionRabbitForMessageDef( def, queueName );
         }
 
-        public void SendMessage( Envelope envelope, ITlvContract msg )
+        public void SendMessage( ServerEnvelope envelope, ITlvContract msg )
         {
-            SendMessage( envelope, msg, null, null, null );
+            SendMessage( envelope, msg, null, null );
         }
 
-        public void SendMessage( Envelope envelope, ITlvContract msg, string exchange, string routingKey, string clientId )
+        public void SendMessage( ServerEnvelope envelope, ITlvContract msg, string exchange, string routingKey )
         {
             MessageDef msgDef = this.msgReg.Get( msg );
 
             var props = this.channel.CreateBasicProperties();
 
-            // Don't assign values to properties if they're null. Rabbit pays attention to whether or
-            // not a field was assigned. If it's been assigned, it'll try to serialize it, causing it
-            // to serialize a null field.
-            if( envelope.CorrelationId != null )
-            {
-                props.CorrelationId = envelope.CorrelationId;
-            }
-
-            if( envelope.SendRepliesTo != null )
-            {
-                props.ReplyTo = envelope.SendRepliesTo;
-            }
-
-            if( clientId != null )
-            {
-                props.Headers = new Dictionary<string, object>();
-                props.Headers["clientId"] = clientId;
-            }
+            envelope.ToRabbit( props );
 
             if( exchange == null )
             {
@@ -115,12 +98,8 @@ namespace MiniBus.Services
         private void DispatchReceivedRabbitMsg( object sender, BasicDeliverEventArgs e )
         {
             string msgName = e.BasicProperties.MessageId;
-            string clientId = null;
 
-            if( e.BasicProperties.Headers != null && e.BasicProperties.Headers.ContainsKey( "clientId" ) )
-            {
-                clientId = Encoding.UTF8.GetString( (byte[])e.BasicProperties.Headers["clientId"] );
-            }
+            var env = ServerEnvelope.FromRabbit( e.BasicProperties );
 
             if( this.handlers.TryGetValue( msgName, out IHandlerRegistration handler ) )
             {
@@ -133,7 +112,7 @@ namespace MiniBus.Services
                     this.tlvReader.UnloadBuffer();
                 }
 
-                handler.Deliver( msg, e.BasicProperties.CorrelationId, e.BasicProperties.ReplyTo, clientId );
+                handler.Deliver( msg, env );
             }
             else
             {
@@ -190,7 +169,7 @@ namespace MiniBus.Services
 
         private interface IHandlerRegistration
         {
-            void Deliver( ITlvContract msg, string senderCorrId, string senderReplyTo, string clientId );
+            void Deliver( ITlvContract msg, ServerEnvelope env );
         }
 
         private class HandlerRegistration<T> : IHandlerRegistration where T : ITlvContract, new()
@@ -204,13 +183,13 @@ namespace MiniBus.Services
                 this.handler = handler;
             }
 
-            public void Deliver( ITlvContract msg, string senderCorrId, string senderReplyTo, string clientId )
+            public void Deliver( ITlvContract msg, ServerEnvelope env )
             {
                 RabbitConsumeContext consumeContext;
 
                 consumeContext = this.parent.consumeContextPool.Get();
 
-                consumeContext.Load( senderCorrId, senderReplyTo, clientId );
+                consumeContext.Load( env );
                 this.handler.Invoke( (T)msg, consumeContext );
                 consumeContext.Unload();
 
@@ -230,11 +209,11 @@ namespace MiniBus.Services
                 this.parent = parent;
             }
 
-            public void Load( string senderCorrId, string senderReplyTo, string clientId )
+            public void Load( ServerEnvelope env )
             {
-                this.senderCorrId = senderCorrId;
-                this.senderReplyTo = senderReplyTo;
-                this.clientId = clientId;
+                this.senderCorrId = env.CorrelationId;
+                this.senderReplyTo = env.SendRepliesTo;
+                this.clientId = env.ClientId;
             }
 
             public void Unload()
@@ -251,9 +230,10 @@ namespace MiniBus.Services
 
             public void Reply( ITlvContract msg, ReplyOptions options )
             {
-                Envelope replyEnv = new Envelope()
+                var replyEnv = new ServerEnvelope()
                 {
                     CorrelationId = this.senderCorrId,
+                    ClientId = this.clientId,
                 };
 
                 if( options?.RedirectReplies == true )
@@ -267,8 +247,67 @@ namespace MiniBus.Services
                 }
                 else
                 {
-                    this.parent.SendMessage( replyEnv, msg, "", this.senderReplyTo, this.clientId );
+                    this.parent.SendMessage( replyEnv, msg, "", this.senderReplyTo );
                 }
+            }
+        }
+    }
+
+    public class ServerEnvelope
+    {
+        public string CorrelationId { get; set; }
+
+        public string SendRepliesTo { get; set; }
+
+        public string ClientId { get; set; }
+
+        public static ServerEnvelope FromRabbit( IBasicProperties props )
+        {
+            var env = new ServerEnvelope();
+
+            if( props.CorrelationId != null )
+            {
+                env.CorrelationId = props.CorrelationId;
+            }
+
+            if( props.ReplyTo != null )
+            {
+                env.SendRepliesTo = props.ReplyTo;
+            }
+
+            IDictionary<string, object> headers = props.Headers;
+
+            if( headers != null && headers.ContainsKey( "clientId" ) )
+            {
+                env.ClientId = Encoding.UTF8.GetString( (byte[])headers["clientId"] );
+            }
+
+            return env;
+        }
+
+        public void ToRabbit( IBasicProperties props )
+        {
+            // Don't assign values to properties if they're null. Rabbit pays attention to whether or
+            // not a field was assigned. If it's been assigned, it'll try to serialize it, causing it
+            // to serialize a null field.
+            if( this.CorrelationId != null )
+            {
+                props.CorrelationId = this.CorrelationId;
+            }
+
+            if( this.SendRepliesTo != null )
+            {
+                props.ReplyTo = this.SendRepliesTo;
+            }
+
+            if( this.ClientId != null )
+            {
+                if( props.Headers == null )
+                {
+                    props.Headers = new Dictionary<string, object>();
+                }
+
+                props.Headers.Add( "clientId", this.ClientId );
             }
         }
     }
