@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MiniBus.ClientApi.Gateway
+namespace MiniBus.Gateway
 {
     public class GatewayTlvs
     {
