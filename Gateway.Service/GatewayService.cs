@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using MiniBus.ClientApi;
 using MiniBus.ClientApi.Gateway;
 using MiniBus.Gateway;
 using MiniBus.Services;
@@ -143,7 +144,7 @@ namespace Gateway.Service
             {
                 this.client = client;
                 this.parent = parent;
-                this.ClientId = Guid.NewGuid().ToString( "B" );
+                this.ClientId = CorrId.Create();
 
                 this.tlvSocket = new TlvClient( client.GetStream() );
                 this.tlvSocket.Register<GatewayRequestMsg>();

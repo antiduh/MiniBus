@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
+using MiniBus.ClientApi;
 using PocketTlv;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -234,7 +235,7 @@ namespace MiniBus.Services
             {
                 if( corrId == null )
                 {
-                    this.CorrelationId = Guid.NewGuid().ToString( "B" );
+                    this.CorrelationId = CorrId.Create();
                 }
                 else
                 {
