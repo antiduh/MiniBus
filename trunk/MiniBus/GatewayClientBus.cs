@@ -125,7 +125,7 @@ namespace MiniBus.ClientApi
 
                 if( corrId == null )
                 {
-                    this.ConversationId = Guid.NewGuid().ToString( "B" );
+                    this.ConversationId = CorrId.Create();
                 }
                 else
                 {
