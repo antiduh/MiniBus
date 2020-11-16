@@ -19,6 +19,7 @@ namespace Gateway.Service
 
         private TcpListener listenSocket;
         private IModel channel;
+        private ModelWithRecovery remodel;
         private EventingBasicConsumer rabbitConsumer;
         private Dictionary<string, GatewayClient> clientMap;
 
@@ -39,19 +40,34 @@ namespace Gateway.Service
             this.clientMap = new Dictionary<string, GatewayClient>();
         }
 
-        public void Connect( IModel channel )
+        public void Connect( ModelWithRecovery remodel )
         {
-            this.channel = channel;
+            this.remodel = remodel;
+            this.channel = remodel.Model;
 
             this.rabbitConsumer = new EventingBasicConsumer( this.channel );
             this.rabbitConsumer.Received += DispatchReceivedRabbitMsg;
+            
+            this.remodel.RecoverySucceeded += Remodel_RecoverySucceeded;
 
-            // Listen on a queue that's specific to this service instance.
-            this.privateQueueName = this.channel.QueueDeclare().QueueName;
-            this.channel.BasicConsume( this.privateQueueName, true, this.rabbitConsumer );
+            ListenOnPrivateQueue();
 
             this.listenThread = new Thread( ListenThreadEntry );
             this.listenThread.Start();
+        }
+
+        private void ListenOnPrivateQueue()
+        {
+            // Listen on a queue that's specific to this service instance.
+            this.privateQueueName = this.channel.QueueDeclare().QueueName;
+            this.channel.BasicConsume( this.privateQueueName, true, this.rabbitConsumer );
+        }
+
+        private void Remodel_RecoverySucceeded( object sender, EventArgs e )
+        {
+            Console.Write( "GatewayService: Reconnecting..." );
+            ListenOnPrivateQueue();
+            Console.Write( "GatewayService: Reconnecting... done" );
         }
 
         private void PublishRabbit( GatewayRequestMsg msg, GatewayClient client )
