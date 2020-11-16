@@ -38,6 +38,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChannelDownException.cs" />
     <Compile Include="CorrId.cs" />
     <Compile Include="DeliveryException.cs" />
     <Compile Include="GatewayClientBus.cs" />

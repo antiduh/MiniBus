@@ -18,9 +18,9 @@ namespace Demo
         [STAThread]
         private static void Main()
         {
-            //RabbitBusDemo();
+            RabbitBusDemo();
 
-            GatewayDemo();
+            //GatewayDemo();
         }
 
         private static void GatewayDemo()
@@ -78,7 +78,7 @@ namespace Demo
                 {
                     client1.DoEcho( "Hello" );
                     Console.WriteLine( "EchoClient: Echo complete." );
-                    Thread.Sleep( 1000 );
+                    Thread.Sleep( 100 );
                 }
             }
 
