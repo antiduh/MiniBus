@@ -38,7 +38,7 @@ namespace Demo
 
                 // --- Gateway ---
                 GatewayService gatewayService = new GatewayService( 10001 );
-                gatewayService.Connect( rabbitConnServer.Connect().Model );
+                gatewayService.Connect( rabbitConnServer.Connect() );
 
                 GatewayClientBus clientBus = new GatewayClientBus( "localhost", 10001 );
                 clientBus.Connect();
