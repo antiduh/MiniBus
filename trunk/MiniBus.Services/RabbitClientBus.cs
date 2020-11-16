@@ -6,6 +6,7 @@ using System.Threading;
 using PocketTlv;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RabbitMQ.Client.Exceptions;
 
 namespace MiniBus.Services
 {
@@ -124,9 +125,9 @@ namespace MiniBus.Services
                     this.tlvWriter.Write( msg );
                     this.channel.BasicPublish( exchange, routingKey, props, this.tlvWriter.GetBuffer() );
                 }
-                catch( Exception e )
+                catch( AlreadyClosedException e )
                 {
-                    Console.WriteLine( "Channel crash" );
+                    throw new ChannelDownException();
                 }
                 finally
                 {
@@ -313,11 +314,9 @@ namespace MiniBus.Services
 
                         break;
                     }
-                    catch( Exception e )
+                    catch( DeliveryException e )
                     {
-                        Console.WriteLine( $"Request crashed: {e.Message}. Retrying.." );
                         failure = ExceptionDispatchInfo.Capture( e );
-
                         Thread.Sleep( 1000 );
                     }
                 }

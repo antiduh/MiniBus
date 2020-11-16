@@ -182,7 +182,7 @@ namespace MiniBus
 
                         break;
                     }
-                    catch( Exception e )
+                    catch( DeliveryException e )
                     {
                         failure = ExceptionDispatchInfo.Capture( e );
                         Thread.Sleep( 1000 );
