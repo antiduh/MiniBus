@@ -88,6 +88,14 @@ namespace MiniBus.Gateway
 
         public void Register<T>() where T : ITlvContract, new()
         {
+            if( this.started )
+            {
+                throw new InvalidOperationException( 
+                    "In order to prevent race conditions, the client does not allow contract " +
+                    "registrations after it has been started." 
+                );
+            }
+
             this.tlvReader.RegisterContract<T>();
         }
     }
