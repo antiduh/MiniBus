@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace MiniBus
 {
     /// <summary>
-    /// Occurs when attempting to send a message into a channel that is currently disconnected.
+    /// Occurs when an attempt is made to send a message into a channel that is currently disconnected.
     /// </summary>
     /// <remarks>
     /// Bus implementations may temporarily be disconnected if a remote server fails and the bus
