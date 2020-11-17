@@ -58,7 +58,10 @@ namespace MiniBus
         {
             var context = new GatewayRequestContext( this, corrId );
 
-            this.pendingConversations.Add( context.ConversationId, context );
+            lock( this.pendingConversations )
+            {
+                this.pendingConversations.Add( context.ConversationId, context );
+            }
 
             return context;
         }
@@ -99,7 +102,15 @@ namespace MiniBus
                 SendRepliesTo = gatewayMsg.SendRepliesTo,
             };
 
-            if( this.pendingConversations.TryGetValue( gatewayMsg.CorrelationId, out GatewayRequestContext context ) )
+            bool foundConvo = false;
+            GatewayRequestContext context;
+
+            lock( this.pendingConversations )
+            {
+                foundConvo = this.pendingConversations.TryGetValue( gatewayMsg.CorrelationId, out context );
+            }
+
+            if( foundConvo )
             {
                 context.DispatchMessage( env, gatewayMsg.Message );
             }
