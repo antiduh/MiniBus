@@ -356,9 +356,9 @@ namespace MiniBus.Services
 
             private struct Dispatch
             {
-                public Dispatch( ClientEnvelope envelope, ITlvContract message )
+                public Dispatch( ClientEnvelope env, ITlvContract message )
                 {
-                    Envelope = envelope;
+                    Envelope = env;
                     Message = message;
                 }
 
