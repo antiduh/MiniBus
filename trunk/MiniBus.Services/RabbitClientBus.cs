@@ -98,21 +98,21 @@ namespace MiniBus.Services
             SendMessageInternal( env, msg, msgDef, exchange, routingKey );
         }
 
-        private void SendMessageInternal( ClientEnvelope envelope, ITlvContract msg, MessageDef msgDef, string exchange, string routingKey )
+        private void SendMessageInternal( ClientEnvelope env, ITlvContract msg, MessageDef msgDef, string exchange, string routingKey )
         {
             var props = this.channel.CreateBasicProperties();
 
             // Don't assign values to properties if they're null. Rabbit pays attention to whether or
             // not a field was assigned. If it's been assigned, it'll try to serialize it, causing it
             // to serialize a null field.
-            if( envelope.CorrelationId != null )
+            if( env.CorrelationId != null )
             {
-                props.CorrelationId = envelope.CorrelationId;
+                props.CorrelationId = env.CorrelationId;
             }
 
-            if( envelope.SendRepliesTo != null )
+            if( env.SendRepliesTo != null )
             {
-                props.ReplyTo = envelope.SendRepliesTo;
+                props.ReplyTo = env.SendRepliesTo;
             }
 
             props.MessageId = msgDef.Name;
