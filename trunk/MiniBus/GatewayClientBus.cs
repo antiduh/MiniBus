@@ -94,12 +94,18 @@ namespace MiniBus
 
         private void TlvClient_Received( ITlvContract msg )
         {
-            var gatewayMsg = msg.Resolve<GatewayResponseMsg>();
+            if( msg.TryResolve( out GatewayResponseMsg response ) )
+            {
+                DispatchReceived( response );
+            }
+        }
 
+        private void DispatchReceived( GatewayResponseMsg response )
+        {
             var env = new ClientEnvelope()
             {
-                CorrelationId = gatewayMsg.CorrelationId,
-                SendRepliesTo = gatewayMsg.SendRepliesTo,
+                CorrelationId = response.CorrelationId,
+                SendRepliesTo = response.SendRepliesTo,
             };
 
             bool foundConvo = false;
@@ -107,16 +113,16 @@ namespace MiniBus
 
             lock( this.pendingConversations )
             {
-                foundConvo = this.pendingConversations.TryGetValue( gatewayMsg.CorrelationId, out context );
+                foundConvo = this.pendingConversations.TryGetValue( response.CorrelationId, out context );
             }
 
             if( foundConvo )
             {
-                context.DispatchMessage( env, gatewayMsg.Message );
+                context.DispatchMessage( env, response.Message );
             }
             else
             {
-                Console.WriteLine( $"Client Failure: No handler registered for message {gatewayMsg.MessageName}." );
+                Console.WriteLine( $"Client Failure: No handler registered for message {response.MessageName}." );
             }
         }
 
