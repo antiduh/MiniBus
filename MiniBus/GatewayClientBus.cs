@@ -151,10 +151,17 @@ namespace MiniBus
 
             public ITlvContract WaitResponse( TimeSpan timeout )
             {
-                throw new NotImplementedException();
+                return WaitResponseInternal( timeout ).Message;
             }
 
             public T WaitResponse<T>( TimeSpan timeout ) where T : ITlvContract, new()
+            {
+                Dispatch dispatch = WaitResponseInternal( timeout );
+
+                return dispatch.Message.Resolve<T>();
+            }
+
+            private Dispatch WaitResponseInternal( TimeSpan timeout )
             {
                 if( this.inQueue.TryTake( out Dispatch dispatch, timeout ) == false )
                 {
@@ -166,7 +173,7 @@ namespace MiniBus
                     this.redirectQueue = dispatch.Envelope.SendRepliesTo;
                 }
 
-                return dispatch.Message.Resolve<T>();
+                return dispatch;
             }
 
             public void WithRetry( Action action )
