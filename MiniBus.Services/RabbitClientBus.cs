@@ -125,9 +125,13 @@ namespace MiniBus.Services
                     this.tlvWriter.Write( msg );
                     this.channel.BasicPublish( exchange, routingKey, props, this.tlvWriter.GetBuffer() );
                 }
-                catch( AlreadyClosedException e )
+                catch( AlreadyClosedException )
                 {
                     throw new ChannelDownException();
+                }
+                catch( RabbitMQClientException e )
+                {
+                    throw new DeliveryException( "Failed to send message due to exception from RabbitMQ.Client", e );
                 }
                 finally
                 {
