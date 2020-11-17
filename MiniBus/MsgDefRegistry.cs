@@ -6,7 +6,8 @@ using PocketTlv;
 namespace MiniBus
 {
     /// <summary>
-    /// Caches message definitions for message objects.
+    /// Caches message definitions for message objects. All operations on the <see
+    /// cref="MsgDefRegistry"/> class are thread safe.
     /// </summary>
     /// <remarks>
     /// Message definitions are used by both clients and services to define how messages are to be
