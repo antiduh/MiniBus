@@ -5,6 +5,7 @@ using Echo.Client;
 using Echo.Service;
 using Gateway.Service;
 using MiniBus;
+using MiniBus.Gateway;
 using MiniBus.Services;
 using RabbitMQ.Client;
 
@@ -18,9 +19,14 @@ namespace Demo
         [STAThread]
         private static void Main()
         {
-            RabbitBusDemo();
-
-            //GatewayDemo();
+            if( false )
+            {
+                RabbitBusDemo();
+            }
+            else
+            {
+                GatewayDemo();
+            }
         }
 
         private static void GatewayDemo()
@@ -74,11 +80,11 @@ namespace Demo
 
                 Console.WriteLine( "Demo starting." );
 
-                for( int i = 0; i < 1000; i++ )
+                for( int i = 0; i < 1000000; i++ )
                 {
                     client1.DoEcho( "Hello" );
-                    Console.WriteLine( "EchoClient: Echo complete." );
-                    Thread.Sleep( 100 );
+                    //Console.WriteLine( "EchoClient: Echo complete." );
+                    //Thread.Sleep( 100 );
                 }
             }
 
