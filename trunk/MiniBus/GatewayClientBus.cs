@@ -80,11 +80,18 @@ namespace MiniBus
         {
             MessageDef def = this.msgDefs.Get( msg );
 
+            SendMessageInternal( env, msg, def.Exchange, def.Name );
+        }
+
+        private void SendMessageInternal( ClientEnvelope env, ITlvContract msg, string exchange, string routingKey )
+        {
+            MessageDef def = this.msgDefs.Get( msg );
+
             var gatewayMsg = new GatewayRequestMsg()
             {
                 CorrelationId = env.CorrelationId,
-                Exchange = def.Exchange,
-                RoutingKey = def.Name,
+                Exchange = exchange,
+                RoutingKey = routingKey,
                 MessageName = def.Name,
                 Message = msg
             };
@@ -163,7 +170,14 @@ namespace MiniBus
                     CorrelationId = this.ConversationId
                 };
 
-                this.parent.SendMessageInternal( env, msg );
+                if( this.redirectQueue == null )
+                {
+                    this.parent.SendMessageInternal( env, msg );
+                }
+                else
+                {
+                    this.parent.SendMessageInternal( env, msg, "", this.redirectQueue );  
+                }
             }
 
             public ITlvContract WaitResponse( TimeSpan timeout )
