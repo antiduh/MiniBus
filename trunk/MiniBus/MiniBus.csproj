@@ -42,11 +42,13 @@
     <Compile Include="CorrId.cs" />
     <Compile Include="DeliveryException.cs" />
     <Compile Include="Gateway\GatewayClientBus.cs" />
+    <Compile Include="Gateway\GatewayConnectionProvider.cs" />
     <Compile Include="Gateway\GatewayHeartbeatResponse.cs" />
     <Compile Include="Gateway\GatewayHeartbeatRequest.cs" />
     <Compile Include="Gateway\GatewayRequestMsg.cs" />
     <Compile Include="Gateway\GatewayResponseMsg.cs" />
     <Compile Include="Gateway\GatewayTlvs.cs" />
+    <Compile Include="Hostname.cs" />
     <Compile Include="ObjectPool.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="IConsumeContext.cs" />

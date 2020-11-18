@@ -11,8 +11,7 @@ namespace MiniBus.Gateway
 {
     public class GatewayClientBus : IClientBus
     {
-        private readonly string hostname;
-        private readonly int port;
+        private readonly GatewayConnectionProvider connSource;
 
         private TcpClient socket;
 
@@ -22,10 +21,14 @@ namespace MiniBus.Gateway
 
         private Dictionary<string, GatewayRequestContext> pendingConversations;
 
-        public GatewayClientBus( string hostname, int port )
+        public GatewayClientBus( GatewayConnectionProvider connSource )
         {
-            this.hostname = hostname ?? throw new ArgumentNullException( nameof( hostname ) );
-            this.port = port;
+            if( connSource == null )
+            {
+                throw new ArgumentNullException( nameof( connSource ) );
+            }
+
+            this.connSource = connSource;
 
             this.msgDefs = new MsgDefRegistry();
             this.pendingConversations = new Dictionary<string, GatewayRequestContext>();
@@ -33,8 +36,10 @@ namespace MiniBus.Gateway
 
         public void Connect()
         {
+            Hostname gatewayServer = this.connSource.GetConnection();
+
             this.socket = new TcpClient();
-            this.socket.Connect( this.hostname, this.port );
+            this.socket.Connect( gatewayServer.Host, gatewayServer.Port );
 
             this.tlvClient = new TlvClient( this.socket.GetStream() );
             this.tlvClient.Register<GatewayResponseMsg>();
