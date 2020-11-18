@@ -55,7 +55,7 @@
     <Compile Include="Envelope.cs" />
     <Compile Include="IClientBus.cs" />
     <Compile Include="MessageDef.cs" />
-    <Compile Include="Gateway\TlvClient.cs" />
+    <Compile Include="Gateway\MiniBusTlvClient.cs" />
     <Compile Include="MsgDefRegistry.cs" />
     <Compile Include="MsgNameAttribute.cs" />
     <Compile Include="ConcurrentObjectPool.cs" />
