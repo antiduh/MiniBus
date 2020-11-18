@@ -7,7 +7,7 @@ using System.Threading;
 using MiniBus.Gateway;
 using PocketTlv;
 
-namespace MiniBus
+namespace MiniBus.Gateway
 {
     public class GatewayClientBus : IClientBus
     {
