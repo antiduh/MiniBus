@@ -15,7 +15,7 @@ namespace MiniBus.Gateway
 
         private TcpClient socket;
 
-        private TlvClient tlvClient;
+        private MiniBusTlvClient tlvClient;
 
         private MsgDefRegistry msgDefs;
 
@@ -41,7 +41,7 @@ namespace MiniBus.Gateway
             this.socket = new TcpClient();
             this.socket.Connect( gatewayServer.Host, gatewayServer.Port );
 
-            this.tlvClient = new TlvClient( this.socket.GetStream() );
+            this.tlvClient = new MiniBusTlvClient( this.socket.GetStream() );
             this.tlvClient.Register<GatewayResponseMsg>();
             this.tlvClient.Register<GatewayHeartbeatResponse>();
             this.tlvClient.Received += TlvClient_Received;

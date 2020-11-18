@@ -8,7 +8,7 @@ namespace MiniBus.Gateway
     /// <summary>
     /// Reads and writes Minibus messages from a stream.
     /// </summary>
-    public class TlvClient
+    public class MiniBusTlvClient
     {
         private readonly Stream client;
 
@@ -19,7 +19,7 @@ namespace MiniBus.Gateway
 
         private bool started;
 
-        public TlvClient( Stream client )
+        public MiniBusTlvClient( Stream client )
         {
             this.client = client;
 
