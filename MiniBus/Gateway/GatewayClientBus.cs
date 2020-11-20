@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Sockets;
+using System.Threading;
 using MiniBus.Gateway;
 using PocketTlv;
 
@@ -10,11 +12,14 @@ namespace MiniBus.Gateway
     {
         private readonly GatewayConnectionProvider connSource;
 
-        private TcpClient socket;
+        private TlvStreamReader tlvReader;
+        private TlvStreamWriter tlvWriter;
 
-        private MiniBusTlvClient tlvClient;
+        private Thread receiveThread;
 
         private MsgDefRegistry msgDefs;
+
+        private ManualResetEventSlim connectedEvent;
 
         private Dictionary<string, GatewayRequestContext> pendingConversations;
 
@@ -29,26 +34,31 @@ namespace MiniBus.Gateway
 
             this.msgDefs = new MsgDefRegistry();
             this.pendingConversations = new Dictionary<string, GatewayRequestContext>();
+
+            this.connectedEvent = new ManualResetEventSlim( false );
+
+            this.tlvWriter = new TlvStreamWriter();
+            this.tlvReader = new TlvStreamReader();
+            this.tlvReader.RegisterContract<GatewayResponseMsg>();
+            this.tlvReader.RegisterContract<GatewayHeartbeatResponse>();
         }
 
-        public void Connect()
+        public event Action Connected;
+
+        public event Action ConnectionLost;
+
+        public void Start()
         {
-            Hostname gatewayServer = this.connSource.GetConnection();
+            this.receiveThread = new Thread( ReceiveThreadEntry );
+            this.receiveThread.Start();
 
-            this.socket = new TcpClient();
-            this.socket.Connect( gatewayServer.Host, gatewayServer.Port );
-
-            this.tlvClient = new MiniBusTlvClient( this.socket.GetStream() );
-            this.tlvClient.Register<GatewayResponseMsg>();
-            this.tlvClient.Register<GatewayHeartbeatResponse>();
-            this.tlvClient.Received += TlvClient_Received;
-            this.tlvClient.Start();
+            this.connectedEvent.Wait();
         }
 
         public void DeclareMessage<T>() where T : ITlvContract, new()
         {
             this.msgDefs.Add<T>();
-            this.tlvClient.Register<T>();
+            this.tlvReader.RegisterContract<T>();
         }
 
         public IRequestContext StartRequest()
@@ -98,10 +108,75 @@ namespace MiniBus.Gateway
                 Message = msg
             };
 
-            this.tlvClient.SendMessage( gatewayMsg );
+            lock( this.tlvWriter )
+            {
+                this.tlvWriter.Write( gatewayMsg );
+            }
         }
 
-        private void TlvClient_Received( ITlvContract msg )
+        private void ReceiveThreadEntry()
+        {
+            try
+            {
+                ConnectionLoop();
+            }
+            catch( Exception e )
+            {
+                Console.WriteLine( "GatewayClientBus: Receiver stopped due to exception:\r\n" + e );
+            }
+        }
+
+        private void ConnectionLoop()
+        {
+            TcpClient tcpClient;
+            Stream tcpStream;
+
+            while( true )
+            {
+                Hostname gateway = this.connSource.GetConnection();
+
+                using( tcpClient = new TcpClient( gateway.Host, gateway.Port ) )
+                using( tcpStream = tcpClient.GetStream() )
+                {
+                    this.tlvReader.Connect( tcpStream );
+                    this.tlvWriter.Connect( tcpStream );
+
+                    this.connectedEvent.Set();
+                    this.Connected?.Invoke();
+
+                    try
+                    {
+                        ReadLoop();
+                        break;
+                    }
+                    catch( IOException )
+                    {
+                        this.connectedEvent.Reset();
+                        this.ConnectionLost?.Invoke();
+                        Thread.Sleep( 1000 );
+                    }
+                }
+            }
+        }
+
+        private void ReadLoop()
+        {
+            ITlvContract contract;
+
+            while( true )
+            {
+                contract = this.tlvReader.ReadContract();
+
+                if( contract == null )
+                {
+                    break;
+                }
+
+                ProcessReceived( contract );
+            }
+        }
+
+        private void ProcessReceived( ITlvContract msg )
         {
             if( msg.TryResolve( out GatewayResponseMsg response ) )
             {

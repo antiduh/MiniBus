@@ -51,7 +51,7 @@ namespace Demo
                 gatewayList.AddHost( new Hostname( "localhost", 10001 ) );
 
                 GatewayClientBus clientBus = new GatewayClientBus( gatewayList );
-                clientBus.Connect();
+                clientBus.Start();
 
                 // --- Echo Client ---
                 EchoClient echoClient = new EchoClient( clientBus );
