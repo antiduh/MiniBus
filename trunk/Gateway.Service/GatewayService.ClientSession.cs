@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Sockets;
+using System.Threading;
 using MiniBus;
 using MiniBus.Gateway;
 using PocketTlv;
@@ -13,7 +14,10 @@ namespace Gateway.Service
             private readonly TcpClient client;
             private readonly GatewayService parent;
 
-            private MiniBusTlvClient tlvSocket;
+            private Thread receiveThread;
+
+            private TlvStreamReader tlvReader;
+            private TlvStreamWriter tlvWriter;
 
             public ClientSession( TcpClient client, GatewayService parent )
             {
@@ -21,17 +25,19 @@ namespace Gateway.Service
                 this.parent = parent;
                 this.ClientId = CorrId.Create();
 
-                this.tlvSocket = new MiniBusTlvClient( client.GetStream() );
-                this.tlvSocket.Register<GatewayRequestMsg>();
-                this.tlvSocket.Register<GatewayHeartbeatRequest>();
-                this.tlvSocket.Received += Socket_Received;
+                this.tlvReader = new TlvStreamReader( client.GetStream() );
+                this.tlvWriter = new TlvStreamWriter( client.GetStream() );
+
+                this.tlvReader.RegisterContract<GatewayHeartbeatRequest>();
+                this.tlvReader.RegisterContract<GatewayRequestMsg>();
             }
 
             public string ClientId { get; private set; }
 
             public void Start()
             {
-                this.tlvSocket.Start();
+                this.receiveThread = new Thread( ReceiveThreadEntry );
+                this.receiveThread.Start();
             }
 
             public void Stop()
@@ -40,10 +46,33 @@ namespace Gateway.Service
 
             public void Write( ITlvContract message )
             {
-                this.tlvSocket.SendMessage( message );
+                lock( this.tlvWriter )
+                {
+                    this.tlvWriter.Write( message );
+                }
             }
 
-            private void Socket_Received( ITlvContract tlvContract )
+            private void ReceiveThreadEntry()
+            {
+                while( true )
+                {
+                    ITlvContract contract;
+
+                    while( true )
+                    {
+                        contract = this.tlvReader.ReadContract();
+
+                        if( contract == null )
+                        {
+                            break;
+                        }
+
+                        ProcessReceived( contract );
+                    }
+                }
+            }
+
+            private void ProcessReceived( ITlvContract tlvContract )
             {
                 if( tlvContract.ContractId == GatewayTlvs.EchoRequest )
                 {
