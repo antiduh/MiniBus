@@ -21,7 +21,7 @@ namespace Gateway.Service
         private IModel channel;
         private ModelWithRecovery remodel;
         private EventingBasicConsumer rabbitConsumer;
-        private Dictionary<string, GatewayClient> clientMap;
+        private Dictionary<string, ClientSession> clientMap;
 
         private Thread listenThread;
 
@@ -37,7 +37,7 @@ namespace Gateway.Service
             this.tlvReader = new TlvBufferReader();
             this.tlvWriter = new TlvBufferWriter();
 
-            this.clientMap = new Dictionary<string, GatewayClient>();
+            this.clientMap = new Dictionary<string, ClientSession>();
         }
 
         public void Connect( ModelWithRecovery remodel )
@@ -70,7 +70,7 @@ namespace Gateway.Service
             Console.Write( "GatewayService: Reconnecting... done" );
         }
 
-        private void PublishRabbit( GatewayRequestMsg msg, GatewayClient client )
+        private void PublishRabbit( GatewayRequestMsg msg, ClientSession client )
         {
             // To forward to rabbit, we need to know the message parameters.
             // - What is the message name (routing key)?
@@ -104,7 +104,7 @@ namespace Gateway.Service
         {
             string clientId = Encoding.UTF8.GetString( (byte[])e.BasicProperties.Headers["clientId"] );
 
-            GatewayClient client = this.clientMap[clientId];
+            ClientSession client = this.clientMap[clientId];
             ITlvContract message;
 
             lock( this.tlvReader )
@@ -136,7 +136,7 @@ namespace Gateway.Service
                 {
                     TcpClient clientSocket = this.listenSocket.AcceptTcpClient();
 
-                    var client = new GatewayClient( clientSocket, this );
+                    var client = new ClientSession( clientSocket, this );
                     this.clientMap.Add( client.ClientId, client );
 
                     client.Start();
@@ -148,14 +148,14 @@ namespace Gateway.Service
             }
         }
 
-        private class GatewayClient
+        private class ClientSession
         {
             private readonly TcpClient client;
             private readonly GatewayService parent;
 
             private MiniBusTlvClient tlvSocket;
 
-            public GatewayClient( TcpClient client, GatewayService parent )
+            public ClientSession( TcpClient client, GatewayService parent )
             {
                 this.client = client;
                 this.parent = parent;
