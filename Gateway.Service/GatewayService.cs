@@ -153,7 +153,7 @@ namespace Gateway.Service
             private readonly TcpClient client;
             private readonly GatewayService parent;
 
-            private TlvClient tlvSocket;
+            private MiniBusTlvClient tlvSocket;
 
             public GatewayClient( TcpClient client, GatewayService parent )
             {
@@ -161,7 +161,7 @@ namespace Gateway.Service
                 this.parent = parent;
                 this.ClientId = CorrId.Create();
 
-                this.tlvSocket = new TlvClient( client.GetStream() );
+                this.tlvSocket = new MiniBusTlvClient( client.GetStream() );
                 this.tlvSocket.Register<GatewayRequestMsg>();
                 this.tlvSocket.Register<GatewayHeartbeatRequest>();
                 this.tlvSocket.Received += Socket_Received;
