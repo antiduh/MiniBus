@@ -25,8 +25,8 @@ namespace MiniBus.Gateway
 
             this.started = false;
 
-            this.tlvReader = new TlvStreamReader( client );
-            this.tlvWriter = new TlvStreamWriter( client );
+            //this.tlvReader = new TlvStreamReader( client );
+            //this.tlvWriter = new TlvStreamWriter( client );
         }
 
         public event Action<ITlvContract> Received;
@@ -96,7 +96,7 @@ namespace MiniBus.Gateway
                 );
             }
 
-            this.tlvReader.RegisterContract<T>();
+            //this.tlvReader.RegisterContract<T>();
         }
     }
 }
