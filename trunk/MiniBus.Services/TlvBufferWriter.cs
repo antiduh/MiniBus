@@ -12,7 +12,8 @@ namespace MiniBus.Services
         public TlvBufferWriter()
         {
             this.stream = new MemoryStream( 1024 );
-            this.tlvWriter = new TlvStreamWriter( this.stream );
+            this.tlvWriter = new TlvStreamWriter();
+            this.tlvWriter.Connect( this.stream );
         }
 
         public ReadOnlyMemory<byte> GetBuffer()

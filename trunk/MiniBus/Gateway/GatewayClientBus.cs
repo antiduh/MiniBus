@@ -14,6 +14,8 @@ namespace MiniBus.Gateway
 
         private TlvStreamReader tlvReader;
         private TlvStreamWriter tlvWriter;
+        private ContractRegistry contractReg;
+
 
         private Thread receiveThread;
 
@@ -37,10 +39,12 @@ namespace MiniBus.Gateway
 
             this.connectedEvent = new ManualResetEventSlim( false );
 
+            this.contractReg = new ContractRegistry();
+            this.contractReg.Register<GatewayResponseMsg>();
+            this.contractReg.Register<GatewayHeartbeatResponse>();
+
             this.tlvWriter = new TlvStreamWriter();
-            this.tlvReader = new TlvStreamReader();
-            this.tlvReader.RegisterContract<GatewayResponseMsg>();
-            this.tlvReader.RegisterContract<GatewayHeartbeatResponse>();
+            this.tlvReader = new TlvStreamReader( this.contractReg );
         }
 
         public event Action Connected;
@@ -58,7 +62,7 @@ namespace MiniBus.Gateway
         public void DeclareMessage<T>() where T : ITlvContract, new()
         {
             this.msgDefs.Add<T>();
-            this.tlvReader.RegisterContract<T>();
+            this.contractReg.Register<T>();
         }
 
         public IRequestContext StartRequest()

@@ -7,11 +7,16 @@ namespace MiniBus.Services
     {
         private readonly BufferReaderStream view;
         private readonly TlvStreamReader tlvReader;
+        private readonly ContractRegistry contractReg;
 
         public TlvBufferReader()
         {
             this.view = new BufferReaderStream();
-            this.tlvReader = new TlvStreamReader( this.view );
+
+            this.contractReg = new ContractRegistry();
+            
+            this.tlvReader = new TlvStreamReader( this.contractReg );
+            this.tlvReader.Connect( this.view );
         }
 
         public void LoadBuffer( byte[] buffer )
@@ -51,7 +56,7 @@ namespace MiniBus.Services
 
         public void RegisterContract<T>() where T : ITlvContract, new()
         {
-            this.tlvReader.RegisterContract<T>();
+            this.contractReg.Register<T>();
         }
     }
 }

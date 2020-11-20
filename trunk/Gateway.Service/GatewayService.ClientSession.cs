@@ -18,6 +18,7 @@ namespace Gateway.Service
 
             private TlvStreamReader tlvReader;
             private TlvStreamWriter tlvWriter;
+            private ContractRegistry contractReg;
 
             public ClientSession( TcpClient client, GatewayService parent )
             {
@@ -25,11 +26,15 @@ namespace Gateway.Service
                 this.parent = parent;
                 this.ClientId = CorrId.Create();
 
-                this.tlvReader = new TlvStreamReader( client.GetStream() );
-                this.tlvWriter = new TlvStreamWriter( client.GetStream() );
+                this.contractReg = new ContractRegistry();
+                this.contractReg.Register<GatewayHeartbeatRequest>();
+                this.contractReg.Register<GatewayRequestMsg>();
 
-                this.tlvReader.RegisterContract<GatewayHeartbeatRequest>();
-                this.tlvReader.RegisterContract<GatewayRequestMsg>();
+                this.tlvReader = new TlvStreamReader( this.contractReg );
+                this.tlvReader.Connect( client.GetStream() );
+
+                this.tlvWriter = new TlvStreamWriter();
+                this.tlvWriter.Connect( client.GetStream() );
             }
 
             public string ClientId { get; private set; }
