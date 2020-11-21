@@ -41,6 +41,7 @@
     <Compile Include="ChannelDownException.cs" />
     <Compile Include="CorrId.cs" />
     <Compile Include="DeliveryException.cs" />
+    <Compile Include="Gateway\ClientTlvStream.cs" />
     <Compile Include="Gateway\GatewayClientBus.cs" />
     <Compile Include="Gateway\GatewayClientBus.GatewayRequestContext.cs" />
     <Compile Include="Gateway\GatewayConnectionProvider.cs" />
