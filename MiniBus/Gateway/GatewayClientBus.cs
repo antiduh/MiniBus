@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Net.Sockets;
 using System.Threading;
-using MiniBus.Gateway;
 using PocketTlv;
 
 namespace MiniBus.Gateway
@@ -12,16 +9,13 @@ namespace MiniBus.Gateway
     {
         private readonly GatewayConnectionProvider connSource;
 
-        private TlvStreamReader tlvReader;
-        private TlvStreamWriter tlvWriter;
         private ContractRegistry contractReg;
-
 
         private Thread receiveThread;
 
-        private MsgDefRegistry msgDefs;
+        private ClientTlvStream tlvStream;
 
-        private ManualResetEventSlim connectedEvent;
+        private MsgDefRegistry msgDefs;
 
         private Dictionary<string, GatewayRequestContext> pendingConversations;
 
@@ -37,14 +31,11 @@ namespace MiniBus.Gateway
             this.msgDefs = new MsgDefRegistry();
             this.pendingConversations = new Dictionary<string, GatewayRequestContext>();
 
-            this.connectedEvent = new ManualResetEventSlim( false );
-
             this.contractReg = new ContractRegistry();
             this.contractReg.Register<GatewayResponseMsg>();
             this.contractReg.Register<GatewayHeartbeatResponse>();
 
-            this.tlvWriter = new TlvStreamWriter();
-            this.tlvReader = new TlvStreamReader( this.contractReg );
+            this.tlvStream = new ClientTlvStream( this.connSource, this.contractReg );
         }
 
         public event Action Connected;
@@ -55,8 +46,8 @@ namespace MiniBus.Gateway
         {
             this.receiveThread = new Thread( ReceiveThreadEntry );
             this.receiveThread.Start();
-
-            this.connectedEvent.Wait();
+            
+            this.tlvStream.Connect();
         }
 
         public void DeclareMessage<T>() where T : ITlvContract, new()
@@ -112,10 +103,7 @@ namespace MiniBus.Gateway
                 Message = msg
             };
 
-            lock( this.tlvWriter )
-            {
-                this.tlvWriter.Write( gatewayMsg );
-            }
+            this.tlvStream.Write( gatewayMsg );
         }
 
         private void ReceiveThreadEntry()
@@ -132,34 +120,15 @@ namespace MiniBus.Gateway
 
         private void ConnectionLoop()
         {
-            TcpClient tcpClient;
-            Stream tcpStream;
-
             while( true )
             {
-                Hostname gateway = this.connSource.GetConnection();
+                this.tlvStream.Connect();
 
-                using( tcpClient = new TcpClient( gateway.Host, gateway.Port ) )
-                using( tcpStream = tcpClient.GetStream() )
+                try
                 {
-                    this.tlvReader.Connect( tcpStream );
-                    this.tlvWriter.Connect( tcpStream );
-
-                    this.connectedEvent.Set();
-                    this.Connected?.Invoke();
-
-                    try
-                    {
-                        ReadLoop();
-                        break;
-                    }
-                    catch( IOException )
-                    {
-                        this.connectedEvent.Reset();
-                        this.ConnectionLost?.Invoke();
-                        Thread.Sleep( 1000 );
-                    }
+                    ReadLoop();
                 }
+                catch( ChannelDownException ) { }
             }
         }
 
@@ -169,7 +138,7 @@ namespace MiniBus.Gateway
 
             while( true )
             {
-                contract = this.tlvReader.ReadContract();
+                contract = this.tlvStream.Read();
 
                 if( contract == null )
                 {

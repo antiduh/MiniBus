@@ -59,6 +59,19 @@ namespace Gateway.Service
 
             private void ReceiveThreadEntry()
             {
+                try
+                {
+                    ReadLoop();
+                }
+                catch( Exception e )
+                {
+                    // TODO cleanup
+                    Console.WriteLine( "GatewayService: Client died." );
+                }
+            }
+
+            private void ReadLoop()
+            {
                 while( true )
                 {
                     ITlvContract contract;
