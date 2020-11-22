@@ -40,11 +40,11 @@ namespace Demo
 
                 // -- Echo Service ---
                 var echoService = new EchoService( 0 );
-                echoService.Connect( new RabbitServerBus( rabbitConnClient.Connect() ) );
+                echoService.Connect( new RabbitServerBus( rabbitConnClient.GetChannel() ) );
 
                 // --- Gateway ---
                 GatewayService gatewayService = new GatewayService( 10001 );
-                gatewayService.Connect( rabbitConnServer.Connect() );
+                gatewayService.Connect( rabbitConnServer.GetChannel() );
 
                 var gatewayList = new GatewayConnectionProvider();
 
@@ -75,20 +75,20 @@ namespace Demo
             using( var rabbitConnServer = new RabbitConn() )
             {
                 var service = new EchoService( 0 );
-                service.Connect( new RabbitServerBus( rabbitConnServer.Connect() ) );
+                service.Connect( new RabbitServerBus( rabbitConnServer.GetChannel() ) );
 
                 //var service2 = new EchoService( 1 );
                 //service2.Connect( new RabbitServerBus( conn.Connect() ) );
 
-                var client1 = new EchoClient( new RabbitClientBus( rabbitConnClient.Connect() ) );
+                var client1 = new EchoClient( new RabbitClientBus( rabbitConnClient.GetChannel() ) );
 
                 Console.WriteLine( "Demo starting." );
 
                 for( int i = 0; i < 1000000; i++ )
                 {
                     client1.DoEcho( "Hello" );
-                    //Console.WriteLine( "EchoClient: Echo complete." );
-                    //Thread.Sleep( 100 );
+                    Console.WriteLine( "EchoClient: Echo complete." );
+                    Thread.Sleep( 1000 );
                 }
             }
 
@@ -118,7 +118,7 @@ namespace Demo
                 this.connection = rabbitConnFactory.CreateConnection();
             }
 
-            public ModelWithRecovery Connect()
+            public ModelWithRecovery GetChannel()
             {
                 return new ModelWithRecovery(
                     this.connection.CreateModel(),
