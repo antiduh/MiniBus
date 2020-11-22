@@ -129,6 +129,8 @@ namespace MiniBus.Gateway
                     ReadLoop();
                 }
                 catch( ChannelDownException ) { }
+
+                this.tlvStream.Disconnect();
             }
         }
 
