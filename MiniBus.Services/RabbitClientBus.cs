@@ -42,10 +42,16 @@ namespace MiniBus.Services
 
             this.rabbitConsumer = new EventingBasicConsumer( this.channel );
             this.rabbitConsumer.Received += DispatchReceivedRabbitMsg;
+            this.rabbitConsumer.Shutdown += RabbitConsumer_Shutdown;
 
             this.remodel.RecoverySucceeded += Remodel_RecoverySucceeded;
 
             ListenOnPrivateQueue();
+        }
+
+        private void RabbitConsumer_Shutdown( object sender, ShutdownEventArgs e )
+        {
+            Console.WriteLine( "RabbitClientBus: Connection to rabbit lost." );
         }
 
         public void DeclareMessage<T>() where T : ITlvContract, new()

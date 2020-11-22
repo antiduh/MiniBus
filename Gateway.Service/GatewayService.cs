@@ -46,6 +46,7 @@ namespace Gateway.Service
 
             this.rabbitConsumer = new EventingBasicConsumer( this.channel );
             this.rabbitConsumer.Received += DispatchReceivedRabbitMsg;
+            this.rabbitConsumer.Shutdown += RabbitConsumer_Shutdown;
             
             this.remodel.RecoverySucceeded += Remodel_RecoverySucceeded;
 
@@ -53,6 +54,11 @@ namespace Gateway.Service
 
             this.listenThread = new Thread( ListenThreadEntry );
             this.listenThread.Start();
+        }
+
+        private void RabbitConsumer_Shutdown( object sender, ShutdownEventArgs e )
+        {
+            Console.WriteLine( "GatewayService: Lost connection to rabbit." );
         }
 
         private void ListenOnPrivateQueue()
@@ -64,9 +70,9 @@ namespace Gateway.Service
 
         private void Remodel_RecoverySucceeded( object sender, EventArgs e )
         {
-            Console.Write( "GatewayService: Reconnecting..." );
+            Console.WriteLine( "GatewayService: Reconnecting..." );
             ListenOnPrivateQueue();
-            Console.Write( "GatewayService: Reconnecting... done" );
+            Console.WriteLine( "GatewayService: Reconnecting... done" );
         }
 
         private void PublishRabbit( GatewayRequestMsg msg, ClientSession client )
@@ -79,6 +85,7 @@ namespace Gateway.Service
             // - We have to tag the message on rabbit with the ID of our client so we know which socket to write it to when we receive it.
 
             IBasicProperties props = channel.CreateBasicProperties();
+
 
             props.MessageId = msg.MessageName;
 
@@ -97,6 +104,8 @@ namespace Gateway.Service
                 this.channel.BasicPublish( msg.Exchange, msg.RoutingKey, props, tlvWriter.GetBuffer() );
                 this.tlvWriter.Reset();
             }
+
+            Console.WriteLine( "GatewayService: client -----> rabbit" );
         }
 
         private void DispatchReceivedRabbitMsg( object sender, BasicDeliverEventArgs e )
@@ -122,6 +131,8 @@ namespace Gateway.Service
             };
 
             client.Write( outboundMsg );
+
+            Console.WriteLine( "GatewayService: client <----- rabbit" );
         }
 
         private void ListenThreadEntry()
@@ -135,6 +146,7 @@ namespace Gateway.Service
                 {
                     TcpClient clientSocket = this.listenSocket.AcceptTcpClient();
 
+                    Console.WriteLine( "GatewayClient: Client connected" );
                     var client = new ClientSession( clientSocket, this );
                     this.clientMap.Add( client.ClientId, client );
 

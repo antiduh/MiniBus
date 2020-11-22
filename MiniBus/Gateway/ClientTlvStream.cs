@@ -143,7 +143,6 @@ namespace MiniBus.Gateway
         private void ConnectionFailure()
         {
             Console.WriteLine( "ClientTlv: Lost connection. Reconnecting" );
-
             Disconnect();
             StartReconnect();
         }
@@ -175,8 +174,10 @@ namespace MiniBus.Gateway
 
                     try
                     {
+                        Console.WriteLine( $"ClientTlv: Trying to connect to {host.Host}:{host.Port}..." );
                         this.tcpClient = new TcpClient( host.Host, host.Port );
-                        
+                        Console.WriteLine( $"ClientTlv: Trying to connect to {host.Host}:{host.Port}... done" );
+
                         this.tcpStream = this.tcpClient.GetStream();
 
                         this.tlvReader.Connect( this.tcpStream );
@@ -186,6 +187,7 @@ namespace MiniBus.Gateway
                     }
                     catch( IOException )
                     {
+                        Console.WriteLine( $"ClientTlv: Trying to connect to {host.Host}:{host.Port}... attempt failed, retrying" );
                         Thread.Sleep( 1000 );
                     }
                 }
