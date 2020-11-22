@@ -86,7 +86,7 @@ namespace MiniBus.Gateway
             {
                 ExceptionDispatchInfo failure = null;
 
-                for( int i = 0; i < 5; i++ )
+                for( int i = 0; i < 50000; i++ )
                 {
                     try
                     {

@@ -31,8 +31,9 @@ namespace Demo
 
         private static void GatewayDemo()
         {
-            using( var rabbitConnClient = new RabbitConn() )
+            //using( var rabbitConnClient = new RabbitConn() )
             using( var rabbitConnServer = new RabbitConn() )
+            using( var rabbitConnServer2 = new RabbitConn() )
             {
                 // |<------ Client Domain----->|<---------- Rabbit Domain ------------------------->|
                 // |                           |                                                    |
@@ -40,11 +41,11 @@ namespace Demo
 
                 // -- Echo Service ---
                 var echoService = new EchoService( 0 );
-                echoService.Connect( new RabbitServerBus( rabbitConnClient.GetChannel() ) );
+                echoService.Connect( new RabbitServerBus( rabbitConnServer.GetChannel() ) );
 
                 // --- Gateway ---
                 GatewayService gatewayService = new GatewayService( 10001 );
-                gatewayService.Connect( rabbitConnServer.GetChannel() );
+                gatewayService.Connect( rabbitConnServer2.GetChannel() );
 
                 var gatewayList = new GatewayConnectionProvider();
 
@@ -60,7 +61,7 @@ namespace Demo
                 {
                     echoClient.DoEcho( "Hello" );
                     Console.WriteLine( "EchoClient: Echo complete." );
-                    Thread.Sleep( 1000 );
+                    Thread.Sleep( 500 );
                 }
 
                 Console.WriteLine( "Gateway demo complete." );
