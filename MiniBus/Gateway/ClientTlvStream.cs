@@ -13,6 +13,8 @@ namespace MiniBus.Gateway
 
         private bool connected;
 
+        private bool disposed;
+
         private object connectionLock;
 
         private ManualResetEventSlim connectedWaiter;
@@ -26,13 +28,13 @@ namespace MiniBus.Gateway
 
         private Stream tcpStream;
 
-        private bool disposed;
 
         public ClientTlvStream( GatewayConnectionProvider connProv, ContractRegistry contractReg )
         {
             this.connProv = connProv;
             this.contractReg = contractReg;
 
+            this.connected = false;
             this.disposed = false;
             this.connectionLock = new object();
 
@@ -53,6 +55,13 @@ namespace MiniBus.Gateway
         {
             lock( this.connectionLock )
             {
+                if( this.connected == false )
+                {
+                    return;
+                }
+
+                this.connectionThread?.Interrupt();
+
                 this.connectedWaiter.Reset();
 
                 this.connected = false;
@@ -80,13 +89,7 @@ namespace MiniBus.Gateway
             this.connectedWaiter?.Dispose();
             this.connectedWaiter = null;
 
-            var threadCopy = this.connectionThread;
-
-            if( threadCopy != null )
-            {
-                threadCopy?.Interrupt();
-                this.connectionThread = null;
-            }
+            this.connectionThread = null;
         }
 
         public void Write( ITlvContract contract )
@@ -108,9 +111,7 @@ namespace MiniBus.Gateway
             }
             catch( IOException )
             {
-                Disconnect();
-                StartReconnect();
-
+                ConnectionFailure();
                 throw new ChannelDownException();
             }
         }
@@ -134,11 +135,17 @@ namespace MiniBus.Gateway
             }
             catch( IOException )
             {
-                Disconnect();
-                StartReconnect();
-
+                ConnectionFailure();
                 throw new ChannelDownException();
             }
+        }
+
+        private void ConnectionFailure()
+        {
+            Console.WriteLine( "ClientTlv: Lost connection. Reconnecting" );
+
+            Disconnect();
+            StartReconnect();
         }
 
         private void StartReconnect()
@@ -160,32 +167,39 @@ namespace MiniBus.Gateway
 
         private void ReconnectLoop()
         {
-            while( this.disposed == false )
+            try
             {
-                Hostname host = this.connProv.GetConnection();
-
-                try
+                while( this.disposed == false )
                 {
-                    this.tcpClient = new TcpClient( host.Host, host.Port );
+                    Hostname host = this.connProv.GetConnection();
 
-                    this.tcpStream = this.tcpClient.GetStream();
+                    try
+                    {
+                        this.tcpClient = new TcpClient( host.Host, host.Port );
+                        
+                        this.tcpStream = this.tcpClient.GetStream();
 
-                    this.tlvReader.Connect( this.tcpStream );
-                    this.tlvWriter.Connect( this.tcpStream );
+                        this.tlvReader.Connect( this.tcpStream );
+                        this.tlvWriter.Connect( this.tcpStream );
 
-                    break;
+                        break;
+                    }
+                    catch( IOException )
+                    {
+                        Thread.Sleep( 1000 );
+                    }
                 }
-                catch( IOException )
+
+                lock( this.connectionLock )
                 {
-                    Thread.Sleep( 1000 );
+                    this.connectionThread = null;
+                    this.connected = true;
+                    this.connectedWaiter.Set();
                 }
             }
-
-            lock( this.connectionLock )
+            catch( ThreadInterruptedException )
             {
-                this.connectionThread = null;
-                this.connected = true;
-                this.connectedWaiter.Set();
+                // The reconnection thread is being stopped.
             }
         }
     }
