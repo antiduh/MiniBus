@@ -17,7 +17,7 @@ namespace MiniBus.Gateway
 
         private MsgDefRegistry msgDefs;
 
-        private Dictionary<string, GatewayRequestContext> pendingConversations;
+        private Dictionary<string, RequestContext> pendingConversations;
 
         public GatewayClientBus( HostList hostList )
         {
@@ -29,7 +29,7 @@ namespace MiniBus.Gateway
             this.hostList = hostList;
 
             this.msgDefs = new MsgDefRegistry();
-            this.pendingConversations = new Dictionary<string, GatewayRequestContext>();
+            this.pendingConversations = new Dictionary<string, RequestContext>();
 
             this.contractReg = new ContractRegistry();
             this.contractReg.Register<GatewayResponseMsg>();
@@ -63,7 +63,7 @@ namespace MiniBus.Gateway
 
         public IRequestContext StartRequest( string corrId )
         {
-            var context = new GatewayRequestContext( this, corrId );
+            var context = new RequestContext( this, corrId );
 
             lock( this.pendingConversations )
             {
@@ -168,7 +168,7 @@ namespace MiniBus.Gateway
             };
 
             bool foundConvo = false;
-            GatewayRequestContext context;
+            RequestContext context;
 
             lock( this.pendingConversations )
             {
