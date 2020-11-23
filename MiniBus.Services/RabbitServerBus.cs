@@ -156,9 +156,9 @@ namespace MiniBus.Services
 
         private void Remodel_RecoverySucceeded( object sender, EventArgs e )
         {
-            Console.WriteLine( "RabbitServerBus: Reconnecting..." );
+            Console.WriteLine( "RabbitServerBus: Reconnecting rabbit ..." );
             ListenOnPrivateQueue();
-            Console.WriteLine( "RabbitServerBus: Reconnecting... done." );
+            Console.WriteLine( "RabbitServerBus: Reconnecting rabbit ... done." );
         }
 
         private void RabbitConsumer_Shutdown( object sender, ShutdownEventArgs e )
