@@ -5,15 +5,15 @@ using System.Net.Sockets;
 namespace MiniBus.Gateway
 {
     /// <summary>
-    /// Stores the list of known gateways.
+    /// Stores the list of known hosts.
     /// </summary>
-    public class GatewayConnectionProvider
+    public class HostList
     {
         private List<Hostname> hosts;
 
         private Random rand;
 
-        public GatewayConnectionProvider()
+        public HostList()
         {
             this.hosts = new List<Hostname>();
             this.rand = new Random();

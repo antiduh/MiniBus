@@ -41,10 +41,10 @@
     <Compile Include="ChannelDownException.cs" />
     <Compile Include="CorrId.cs" />
     <Compile Include="DeliveryException.cs" />
-    <Compile Include="Gateway\ClientTlvStream.cs" />
+    <Compile Include="Gateway\GatewayConnection.cs" />
     <Compile Include="Gateway\GatewayClientBus.cs" />
     <Compile Include="Gateway\GatewayClientBus.GatewayRequestContext.cs" />
-    <Compile Include="Gateway\GatewayConnectionProvider.cs" />
+    <Compile Include="Gateway\HostList.cs" />
     <Compile Include="Gateway\GatewayHeartbeatResponse.cs" />
     <Compile Include="Gateway\GatewayHeartbeatRequest.cs" />
     <Compile Include="Gateway\GatewayRequestMsg.cs" />

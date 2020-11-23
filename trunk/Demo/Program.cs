@@ -47,7 +47,7 @@ namespace Demo
                 GatewayService gatewayService = new GatewayService( 10001 );
                 gatewayService.Connect( rabbitConnServer2.GetChannel() );
 
-                var gatewayList = new GatewayConnectionProvider();
+                var gatewayList = new HostList();
 
                 gatewayList.AddHost( new Hostname( "localhost", 10001 ) );
 
