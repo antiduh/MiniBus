@@ -8,7 +8,7 @@ namespace MiniBus.Gateway
 {
     public partial class GatewayClientBus
     {
-        private class GatewayRequestContext : IRequestContext
+        private class RequestContext : IRequestContext
         {
             private readonly GatewayClientBus parent;
 
@@ -16,7 +16,7 @@ namespace MiniBus.Gateway
 
             private string redirectQueue;
 
-            public GatewayRequestContext( GatewayClientBus parent, string corrId = null )
+            public RequestContext( GatewayClientBus parent, string corrId = null )
             {
                 this.parent = parent;
 
