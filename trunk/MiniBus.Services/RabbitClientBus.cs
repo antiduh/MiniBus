@@ -219,9 +219,9 @@ namespace MiniBus.Services
 
         private void Remodel_RecoverySucceeded( object sender, EventArgs e )
         {
-            Console.WriteLine( "RabbitClientBus: Reconnecting..." );
+            Console.WriteLine( "RabbitClientBus: Reconnecting rabbit ..." );
             ListenOnPrivateQueue();
-            Console.WriteLine( "RabbitClientBus: Reconnecting... done." );
+            Console.WriteLine( "RabbitClientBus: Reconnecting rabbit ... done." );
         }
 
         private class RabbitRequestContext : IRequestContext

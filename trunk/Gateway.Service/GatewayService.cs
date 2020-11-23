@@ -70,9 +70,9 @@ namespace Gateway.Service
 
         private void Remodel_RecoverySucceeded( object sender, EventArgs e )
         {
-            Console.WriteLine( "GatewayService: Reconnecting..." );
+            Console.WriteLine( "GatewayService: Reconnecting rabbit ..." );
             ListenOnPrivateQueue();
-            Console.WriteLine( "GatewayService: Reconnecting... done" );
+            Console.WriteLine( "GatewayService: Reconnecting rabbit ... done" );
         }
 
         private void PublishRabbit( GatewayRequestMsg msg, ClientSession client )
