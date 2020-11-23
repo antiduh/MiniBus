@@ -14,7 +14,7 @@ namespace MiniBus.Services
             this.view = new BufferReaderStream();
 
             this.contractReg = new ContractRegistry();
-            
+
             this.tlvReader = new TlvStreamReader( this.view, this.contractReg );
         }
 
