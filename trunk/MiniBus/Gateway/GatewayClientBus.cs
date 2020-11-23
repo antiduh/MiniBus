@@ -46,7 +46,7 @@ namespace MiniBus.Gateway
         {
             this.receiveThread = new Thread( ReceiveThreadEntry );
             this.receiveThread.Start();
-            
+
             this.tlvStream.Connect();
         }
 

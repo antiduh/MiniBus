@@ -48,7 +48,7 @@ namespace Gateway.Service
             this.rabbitConsumer = new EventingBasicConsumer( this.channel );
             this.rabbitConsumer.Received += DispatchReceivedRabbitMsg;
             this.rabbitConsumer.Shutdown += RabbitConsumer_Shutdown;
-            
+
             this.remodel.RecoverySucceeded += Remodel_RecoverySucceeded;
 
             ListenOnPrivateQueue();
@@ -141,7 +141,7 @@ namespace Gateway.Service
 
             lock( this.clientMap )
             {
-                 client = this.clientMap[clientId];
+                client = this.clientMap[clientId];
             }
 
             // TODO there's a threading hole here; what happens if we get a message for a client

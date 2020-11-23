@@ -51,7 +51,7 @@ namespace MiniBus.Gateway
                 }
                 else
                 {
-                    this.parent.SendMessageInternal( env, msg, "", this.redirectQueue );  
+                    this.parent.SendMessageInternal( env, msg, "", this.redirectQueue );
                 }
             }
 

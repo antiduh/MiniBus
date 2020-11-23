@@ -12,7 +12,7 @@ namespace Gateway.Service
         private class ClientSession
         {
             private readonly GatewayService parent;
-            
+
             private TcpClient client;
 
             private Thread receiveThread;

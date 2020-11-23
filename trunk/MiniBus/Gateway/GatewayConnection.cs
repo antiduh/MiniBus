@@ -32,7 +32,6 @@ namespace MiniBus.Gateway
 
         private Stream tcpStream;
 
-
         public GatewayConnection( HostList hostList, ContractRegistry contractReg )
         {
             this.hostList = hostList;
