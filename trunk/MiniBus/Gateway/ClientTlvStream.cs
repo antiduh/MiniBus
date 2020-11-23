@@ -46,9 +46,6 @@ namespace MiniBus.Gateway
             this.readLock = new object();
 
             this.connectedWaiter = new ManualResetEventSlim( false );
-
-            this.tlvReader = new TlvStreamReader( this.contractReg );
-            this.tlvWriter = new TlvStreamWriter();
         }
 
         public void Connect()
@@ -73,8 +70,8 @@ namespace MiniBus.Gateway
 
                 this.connected = false;
 
-                this.tlvReader?.Disconnect();
-                this.tlvWriter?.Disconnect();
+                this.tlvReader = null;
+                this.tlvWriter = null;
 
                 this.tcpStream?.Close();
                 this.tcpStream = null;
@@ -89,9 +86,6 @@ namespace MiniBus.Gateway
             Disconnect();
 
             this.disposed = true;
-
-            this.tlvWriter = null;
-            this.tlvReader = null;
 
             this.connectedWaiter?.Dispose();
             this.connectedWaiter = null;
@@ -198,8 +192,8 @@ namespace MiniBus.Gateway
 
                 lock( this.connectionLock )
                 {
-                    this.tlvReader.Connect( this.tcpStream );
-                    this.tlvWriter.Connect( this.tcpStream );
+                    this.tlvReader = new TlvStreamReader( this.tcpStream, this.contractReg );
+                    this.tlvWriter = new TlvStreamWriter( this.tcpStream );
 
                     this.connectionThread = null;
                     this.connected = true;

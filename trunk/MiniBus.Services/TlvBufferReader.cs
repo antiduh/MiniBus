@@ -15,8 +15,7 @@ namespace MiniBus.Services
 
             this.contractReg = new ContractRegistry();
             
-            this.tlvReader = new TlvStreamReader( this.contractReg );
-            this.tlvReader.Connect( this.view );
+            this.tlvReader = new TlvStreamReader( this.view, this.contractReg );
         }
 
         public void LoadBuffer( byte[] buffer )

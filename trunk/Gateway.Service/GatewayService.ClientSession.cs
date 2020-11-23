@@ -36,11 +36,9 @@ namespace Gateway.Service
                 this.contractReg.Register<GatewayHeartbeatRequest>();
                 this.contractReg.Register<GatewayRequestMsg>();
 
-                this.tlvReader = new TlvStreamReader( this.contractReg );
-                this.tlvReader.Connect( client.GetStream() );
-
-                this.tlvWriter = new TlvStreamWriter();
-                this.tlvWriter.Connect( client.GetStream() );
+                var tcpStream = client.GetStream();
+                this.tlvReader = new TlvStreamReader( tcpStream, this.contractReg );
+                this.tlvWriter = new TlvStreamWriter( tcpStream );
             }
 
             public string ClientId { get; private set; }
@@ -79,10 +77,7 @@ namespace Gateway.Service
 
                 this.parent.DisconnectClient( this );
 
-                this.tlvReader?.Disconnect();
                 this.tlvReader = null;
-
-                this.tlvWriter?.Disconnect();
                 this.tlvWriter = null;
 
                 this.client?.Dispose();
