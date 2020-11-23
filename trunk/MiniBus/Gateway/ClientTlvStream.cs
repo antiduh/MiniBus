@@ -180,9 +180,6 @@ namespace MiniBus.Gateway
 
                         this.tcpStream = this.tcpClient.GetStream();
 
-                        this.tlvReader.Connect( this.tcpStream );
-                        this.tlvWriter.Connect( this.tcpStream );
-
                         break;
                     }
                     catch( IOException )
@@ -194,6 +191,9 @@ namespace MiniBus.Gateway
 
                 lock( this.connectionLock )
                 {
+                    this.tlvReader.Connect( this.tcpStream );
+                    this.tlvWriter.Connect( this.tcpStream );
+
                     this.connectionThread = null;
                     this.connected = true;
                     this.connectedWaiter.Set();
