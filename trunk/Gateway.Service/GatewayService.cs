@@ -9,6 +9,7 @@ using MiniBus.Services;
 using PocketTlv;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RabbitMQ.Client.Exceptions;
 
 namespace Gateway.Service
 {
@@ -99,9 +100,19 @@ namespace Gateway.Service
 
             lock( this.tlvWriter )
             {
-                this.tlvWriter.Write( msg.Message );
-                this.channel.BasicPublish( msg.Exchange, msg.RoutingKey, props, tlvWriter.GetBuffer() );
-                this.tlvWriter.Reset();
+                try
+                {
+                    this.tlvWriter.Write( msg.Message );
+                    this.channel.BasicPublish( msg.Exchange, msg.RoutingKey, props, tlvWriter.GetBuffer() );
+                }
+                catch( RabbitMQClientException )
+                {
+                    Console.WriteLine( "GatewayService: Dropping message from client, no connection to rabbit." );
+                }
+                finally
+                {
+                    this.tlvWriter.Reset();
+                }
             }
 
             Console.WriteLine( "GatewayService: client -----> rabbit" );
