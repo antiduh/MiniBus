@@ -7,12 +7,10 @@ namespace MiniBus
     {
         void DeclareMessage<T>() where T : ITlvContract, new();
 
-        // TODO antiduh
         void SendMessage( string corrId, ITlvContract msg );
 
         IRequestContext StartRequest();
 
-        // TODO antiduh
         IRequestContext StartRequest( string corrId );
     }
 
