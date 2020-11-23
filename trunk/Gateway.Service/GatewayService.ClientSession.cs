@@ -11,8 +11,9 @@ namespace Gateway.Service
     {
         private class ClientSession
         {
-            private readonly TcpClient client;
             private readonly GatewayService parent;
+            
+            private TcpClient client;
 
             private Thread receiveThread;
 
@@ -20,11 +21,16 @@ namespace Gateway.Service
             private TlvStreamWriter tlvWriter;
             private ContractRegistry contractReg;
 
+            private object outboundLock;
+
             public ClientSession( TcpClient client, GatewayService parent )
             {
                 this.client = client;
                 this.parent = parent;
+
                 this.ClientId = CorrId.Create();
+
+                this.outboundLock = new object();
 
                 this.contractReg = new ContractRegistry();
                 this.contractReg.Register<GatewayHeartbeatRequest>();
@@ -51,7 +57,7 @@ namespace Gateway.Service
 
             public void Write( ITlvContract message )
             {
-                lock( this.tlvWriter )
+                lock( this.outboundLock )
                 {
                     this.tlvWriter.Write( message );
                 }
@@ -65,9 +71,22 @@ namespace Gateway.Service
                 }
                 catch( Exception e )
                 {
-                    // TODO cleanup
-                    Console.WriteLine( "GatewayService: Client died." );
+                    // TODO
+                    Console.WriteLine( "GatewayService: Client session crashed: " + e.GetType() );
                 }
+
+                Console.WriteLine( "GatewayService: Client stopping." );
+
+                this.parent.DisconnectClient( this );
+
+                this.tlvReader?.Disconnect();
+                this.tlvReader = null;
+
+                this.tlvWriter?.Disconnect();
+                this.tlvWriter = null;
+
+                this.client?.Dispose();
+                this.client = null;
             }
 
             private void ReadLoop()
