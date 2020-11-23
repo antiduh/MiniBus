@@ -6,9 +6,9 @@ using PocketTlv;
 
 namespace MiniBus.Gateway
 {
-    public class ClientTlvStream : IDisposable
+    public class GatewayConnection : IDisposable
     {
-        private readonly GatewayConnectionProvider connProv;
+        private readonly HostList hostList;
         private readonly ContractRegistry contractReg;
 
         private bool connected;
@@ -33,9 +33,9 @@ namespace MiniBus.Gateway
         private Stream tcpStream;
 
 
-        public ClientTlvStream( GatewayConnectionProvider connProv, ContractRegistry contractReg )
+        public GatewayConnection( HostList hostList, ContractRegistry contractReg )
         {
-            this.connProv = connProv;
+            this.hostList = hostList;
             this.contractReg = contractReg;
 
             this.connected = false;
@@ -171,7 +171,7 @@ namespace MiniBus.Gateway
             {
                 while( this.disposed == false )
                 {
-                    Hostname host = this.connProv.GetConnection();
+                    Hostname host = this.hostList.GetConnection();
 
                     try
                     {

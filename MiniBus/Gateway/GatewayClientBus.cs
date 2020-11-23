@@ -7,26 +7,26 @@ namespace MiniBus.Gateway
 {
     public partial class GatewayClientBus : IClientBus
     {
-        private readonly GatewayConnectionProvider connSource;
+        private readonly HostList hostList;
 
         private ContractRegistry contractReg;
 
         private Thread receiveThread;
 
-        private ClientTlvStream tlvStream;
+        private GatewayConnection tlvStream;
 
         private MsgDefRegistry msgDefs;
 
         private Dictionary<string, GatewayRequestContext> pendingConversations;
 
-        public GatewayClientBus( GatewayConnectionProvider connSource )
+        public GatewayClientBus( HostList hostList )
         {
-            if( connSource == null )
+            if( hostList == null )
             {
-                throw new ArgumentNullException( nameof( connSource ) );
+                throw new ArgumentNullException( nameof( hostList ) );
             }
 
-            this.connSource = connSource;
+            this.hostList = hostList;
 
             this.msgDefs = new MsgDefRegistry();
             this.pendingConversations = new Dictionary<string, GatewayRequestContext>();
@@ -35,7 +35,7 @@ namespace MiniBus.Gateway
             this.contractReg.Register<GatewayResponseMsg>();
             this.contractReg.Register<GatewayHeartbeatResponse>();
 
-            this.tlvStream = new ClientTlvStream( this.connSource, this.contractReg );
+            this.tlvStream = new GatewayConnection( this.hostList, this.contractReg );
         }
 
         public event Action Connected;
