@@ -17,6 +17,10 @@ namespace MiniBus.Gateway
 
         private object connectionLock;
 
+        private object writeLock;
+
+        private object readLock;
+
         private ManualResetEventSlim connectedWaiter;
 
         private Thread connectionThread;
@@ -36,7 +40,10 @@ namespace MiniBus.Gateway
 
             this.connected = false;
             this.disposed = false;
+
             this.connectionLock = new object();
+            this.writeLock = new object();
+            this.readLock = new object();
 
             this.connectedWaiter = new ManualResetEventSlim( false );
 
@@ -104,7 +111,7 @@ namespace MiniBus.Gateway
 
             try
             {
-                lock( this.tlvWriter )
+                lock( this.writeLock )
                 {
                     this.tlvWriter.Write( contract );
                 }
@@ -128,7 +135,7 @@ namespace MiniBus.Gateway
 
             try
             {
-                lock( this.tlvReader )
+                lock( this.readLock )
                 {
                     return this.tlvReader.ReadContract();
                 }
