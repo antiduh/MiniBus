@@ -86,7 +86,6 @@ namespace Gateway.Service
 
             IBasicProperties props = channel.CreateBasicProperties();
 
-
             props.MessageId = msg.MessageName;
 
             if( msg.CorrelationId.Length > 0 )
@@ -112,7 +111,6 @@ namespace Gateway.Service
         {
             string clientId = Encoding.UTF8.GetString( (byte[])e.BasicProperties.Headers["clientId"] );
 
-            ClientSession client = this.clientMap[clientId];
             ITlvContract message;
 
             lock( this.tlvReader )
@@ -130,9 +128,26 @@ namespace Gateway.Service
                 SendRepliesTo = e.BasicProperties.ReplyTo
             };
 
+            ClientSession client;
+
+            lock( this.clientMap )
+            {
+                 client = this.clientMap[clientId];
+            }
+
+            // TODO there's a threading hole here; what happens if we get a message for a client
+            // riiight as they're in the process of crashing?
             client.Write( outboundMsg );
 
             Console.WriteLine( "GatewayService: client <----- rabbit" );
+        }
+
+        private void DisconnectClient( ClientSession session )
+        {
+            lock( this.clientMap )
+            {
+                this.clientMap.Remove( session.ClientId );
+            }
         }
 
         private void ListenThreadEntry()
@@ -148,7 +163,11 @@ namespace Gateway.Service
 
                     Console.WriteLine( "GatewayClient: Client connected" );
                     var client = new ClientSession( clientSocket, this );
-                    this.clientMap.Add( client.ClientId, client );
+
+                    lock( this.clientMap )
+                    {
+                        this.clientMap.Add( client.ClientId, client );
+                    }
 
                     client.Start();
                 }
