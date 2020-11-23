@@ -1,5 +1,4 @@
-﻿using System;
-using PocketTlv;
+﻿using PocketTlv;
 
 namespace MiniBus
 {
@@ -12,33 +11,5 @@ namespace MiniBus
         IRequestContext StartRequest();
 
         IRequestContext StartRequest( string corrId );
-    }
-
-    public interface IRequestContext : IDisposable
-    {
-        void SendRequest( ITlvContract msg );
-
-        ITlvContract WaitResponse( TimeSpan timeout );
-
-        T WaitResponse<T>( TimeSpan timeout ) where T : ITlvContract, new();
-
-        void WithRetry( Action action );
-    }
-
-    public class ClientEnvelope
-    {
-        public ClientEnvelope()
-        {
-        }
-
-        public ClientEnvelope( string correlationId, string sendRepliesTo )
-        {
-            this.CorrelationId = correlationId;
-            this.SendRepliesTo = sendRepliesTo;
-        }
-
-        public string CorrelationId { get; set; }
-
-        public string SendRepliesTo { get; set; }
     }
 }

@@ -39,6 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChannelDownException.cs" />
+    <Compile Include="ClientEnvelope.cs" />
     <Compile Include="CorrId.cs" />
     <Compile Include="DeliveryException.cs" />
     <Compile Include="Gateway\GatewayConnection.cs" />
@@ -51,6 +52,7 @@
     <Compile Include="Gateway\GatewayResponseMsg.cs" />
     <Compile Include="Gateway\GatewayTlvs.cs" />
     <Compile Include="Hostname.cs" />
+    <Compile Include="IRequestContext.cs" />
     <Compile Include="ObjectPool.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="IConsumeContext.cs" />
