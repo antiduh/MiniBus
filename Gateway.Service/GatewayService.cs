@@ -114,8 +114,6 @@ namespace Gateway.Service
                     this.tlvWriter.Reset();
                 }
             }
-
-            Console.WriteLine( "GatewayService: client -----> rabbit" );
         }
 
         private void DispatchReceivedRabbitMsg( object sender, BasicDeliverEventArgs e )
@@ -149,8 +147,6 @@ namespace Gateway.Service
             // TODO there's a threading hole here; what happens if we get a message for a client
             // riiight as they're in the process of crashing?
             client.Write( outboundMsg );
-
-            Console.WriteLine( "GatewayService: client <----- rabbit" );
         }
 
         private void DisconnectClient( ClientSession session )
