@@ -75,8 +75,8 @@ namespace Demo
             using( var rabbitConnClient = new RabbitConn() )
             using( var rabbitConnServer = new RabbitConn() )
             {
-                var service = new EchoService( 0 );
-                service.Connect( new RabbitServerBus( rabbitConnServer.GetChannel() ) );
+                var echoService = new EchoService( 0 );
+                echoService.Connect( new RabbitServerBus( rabbitConnServer.GetChannel() ) );
 
                 //var service2 = new EchoService( 1 );
                 //service2.Connect( new RabbitServerBus( conn.Connect() ) );
