@@ -187,12 +187,17 @@ namespace MiniBus.Services
                 RabbitConsumeContext consumeContext;
 
                 consumeContext = this.parent.consumeContextPool.Get();
+                try
+                {
 
-                consumeContext.Load( env );
-                this.handler.Invoke( (T)msg, consumeContext );
-                consumeContext.Unload();
-
-                this.parent.consumeContextPool.Return( consumeContext );
+                    consumeContext.Load( env );
+                    this.handler.Invoke( (T)msg, consumeContext );
+                    consumeContext.Unload();
+                }
+                finally
+                {
+                    this.parent.consumeContextPool.Return( consumeContext );
+                }
             }
         }
 
