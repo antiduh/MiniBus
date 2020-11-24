@@ -13,7 +13,7 @@ namespace MiniBus.Gateway
 
         private bool connected;
 
-        private bool disposed;
+        private bool reconnecting;
 
         private object connectionLock;
 
@@ -23,7 +23,7 @@ namespace MiniBus.Gateway
 
         private ManualResetEventSlim connectedWaiter;
 
-        private Thread connectionThread;
+        private GatewayConnectionLoop connectionLoop;
 
         private TlvStreamWriter tlvWriter;
         private TlvStreamReader tlvReader;
@@ -38,7 +38,7 @@ namespace MiniBus.Gateway
             this.contractReg = contractReg;
 
             this.connected = false;
-            this.disposed = false;
+            this.reconnecting = false;
 
             this.connectionLock = new object();
             this.writeLock = new object();
@@ -47,9 +47,22 @@ namespace MiniBus.Gateway
             this.connectedWaiter = new ManualResetEventSlim( false );
         }
 
+        /// <summary>
+        /// Occurs when the connection to the gateway has been restored after a connection loss event.
+        /// </summary>
+        public event Action ConnectionRestored;
+
+        /// <summary>
+        /// Occurs when the connection to the gateway has been lost.
+        /// </summary>
+        public event Action ConnectionLost;
+
         public void Connect()
         {
-            StartReconnect();
+            lock( this.connectionLock )
+            {
+                StartReconnect();
+            }
 
             this.connectedWaiter.Wait();
         }
@@ -58,25 +71,7 @@ namespace MiniBus.Gateway
         {
             lock( this.connectionLock )
             {
-                if( this.connected == false )
-                {
-                    return;
-                }
-
-                this.connectionThread?.Interrupt();
-
-                this.connectedWaiter.Reset();
-
-                this.connected = false;
-
-                this.tlvReader = null;
-                this.tlvWriter = null;
-
-                this.tcpStream?.Close();
-                this.tcpStream = null;
-
-                this.tcpClient?.Dispose();
-                this.tcpClient = null;
+                DisconnectInternal();
             }
         }
 
@@ -84,12 +79,8 @@ namespace MiniBus.Gateway
         {
             Disconnect();
 
-            this.disposed = true;
-
             this.connectedWaiter?.Dispose();
             this.connectedWaiter = null;
-
-            this.connectionThread = null;
         }
 
         public void Write( ITlvContract contract )
@@ -142,66 +133,79 @@ namespace MiniBus.Gateway
 
         private void ConnectionFailure()
         {
-            Console.WriteLine( "ClientTlv: Lost connection. Reconnecting" );
-            Disconnect();
-            StartReconnect();
+            this.ConnectionLost?.Invoke();
+
+            lock( this.connectionLock )
+            {
+                this.reconnecting = true;
+
+                DisconnectInternal();
+                StartReconnect();
+            }
         }
 
         private void StartReconnect()
         {
-            lock( this.connectionLock )
+            if( this.connectionLoop != null )
             {
-                if( this.connectionThread != null )
-                {
-                    // Already running.
-                    return;
-                }
-                else
-                {
-                    this.connectionThread = new Thread( ReconnectLoop );
-                    this.connectionThread.Start();
-                }
+                // Already running.
+                return;
+            }
+            else
+            {
+                this.connectionLoop = new GatewayConnectionLoop( 
+                    this.hostList, 
+                    TimeSpan.FromSeconds( 1 ),
+                    ConnectionLoop_Completed 
+                );
             }
         }
 
-        private void ReconnectLoop()
+        private void DisconnectInternal()
         {
-            try
+            this.connectionLoop?.Cancel();
+            this.connectionLoop = null;
+
+            if( this.connected == false )
             {
-                while( this.disposed == false )
-                {
-                    Hostname host = this.hostList.GetConnection();
-
-                    try
-                    {
-                        Console.WriteLine( $"ClientTlv: Trying to connect to {host.Host}:{host.Port}..." );
-                        this.tcpClient = new TcpClient( host.Host, host.Port );
-                        Console.WriteLine( $"ClientTlv: Trying to connect to {host.Host}:{host.Port}... done" );
-
-                        this.tcpStream = this.tcpClient.GetStream();
-
-                        break;
-                    }
-                    catch( IOException )
-                    {
-                        Console.WriteLine( $"ClientTlv: Trying to connect to {host.Host}:{host.Port}... attempt failed, retrying" );
-                        Thread.Sleep( 1000 );
-                    }
-                }
-
-                lock( this.connectionLock )
-                {
-                    this.tlvReader = new TlvStreamReader( this.tcpStream, this.contractReg );
-                    this.tlvWriter = new TlvStreamWriter( this.tcpStream );
-
-                    this.connectionThread = null;
-                    this.connected = true;
-                    this.connectedWaiter.Set();
-                }
+                return;
             }
-            catch( ThreadInterruptedException )
+
+            this.connectedWaiter.Reset();
+
+            this.tlvReader = null;
+            this.tlvWriter = null;
+
+            this.tcpStream?.Close();
+            this.tcpStream = null;
+
+            this.tcpClient?.Dispose();
+            this.tcpClient = null;
+
+            // Finally, mark that we're disconnected.
+            this.connected = false;
+        }
+
+        private void ConnectionLoop_Completed( TcpClient newClient )
+        {
+            lock( this.connectionLock )
             {
-                // The reconnection thread is being stopped.
+                this.tcpClient = newClient;
+                this.tcpStream = this.tcpClient.GetStream();
+                
+                this.tlvReader = new TlvStreamReader( this.tcpStream, this.contractReg );
+                this.tlvWriter = new TlvStreamWriter( this.tcpStream );
+
+                this.connectionLoop = null;
+                this.connected = true;
+
+                this.connectedWaiter.Set();
+
+                if( this.reconnecting )
+                {
+                    this.reconnecting = false;
+                    this.ConnectionRestored?.Invoke();
+                }
             }
         }
     }

@@ -45,6 +45,7 @@
     <Compile Include="Gateway\GatewayConnection.cs" />
     <Compile Include="Gateway\GatewayClientBus.cs" />
     <Compile Include="Gateway\GatewayClientBus.RequestContext.cs" />
+    <Compile Include="Gateway\GatewayConnectionLoop.cs" />
     <Compile Include="Gateway\HostList.cs" />
     <Compile Include="Gateway\GatewayHeartbeatResponse.cs" />
     <Compile Include="Gateway\GatewayHeartbeatRequest.cs" />
