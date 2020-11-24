@@ -44,12 +44,12 @@ namespace Demo
                 echoService.Connect( new RabbitServerBus( rabbitConnServer.GetChannel() ) );
 
                 // --- Gateway ---
-                GatewayService gatewayService = new GatewayService( 10001 );
+                GatewayService gatewayService = new GatewayService( 10001, false );
                 gatewayService.Connect( rabbitConnServer2.GetChannel() );
 
                 var gatewayList = new HostList();
 
-                gatewayList.AddHost( new Hostname( "localhost", 10001 ) );
+                gatewayList.AddHost( new Hostname( "127.0.0.1", 10001 ) );
 
                 GatewayClientBus clientBus = new GatewayClientBus( gatewayList );
                 clientBus.Start();

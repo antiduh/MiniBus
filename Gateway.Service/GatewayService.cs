@@ -16,7 +16,7 @@ namespace Gateway.Service
     public partial class GatewayService
     {
         private readonly int port;
-
+        private readonly bool listenIpv6;
         private TcpListener listenSocket;
         private IModel channel;
         private ModelWithRecovery remodel;
@@ -30,9 +30,10 @@ namespace Gateway.Service
 
         private string privateQueueName;
 
-        public GatewayService( int port )
+        public GatewayService( int port, bool listenIpv6 )
         {
             this.port = port;
+            this.listenIpv6 = listenIpv6;
 
             this.tlvReader = new TlvBufferReader();
             this.tlvWriter = new TlvBufferWriter();
@@ -159,7 +160,20 @@ namespace Gateway.Service
 
         private void ListenThreadEntry()
         {
-            this.listenSocket = new TcpListener( IPAddress.Any, port );
+            // The reasons why we support turning off IPv6 listening are:
+            // - In case the user has some weird case that IPv6 behaves poorly with.
+            // - It's useful to disable IPv6 while debugging.
+
+            if( listenIpv6 )
+            {
+                this.listenSocket = new TcpListener( IPAddress.IPv6Any, port );
+                this.listenSocket.Server.DualMode = true;
+            }
+            else
+            {
+                this.listenSocket = new TcpListener( IPAddress.Any, port );
+            }
+
             this.listenSocket.Start();
 
             while( true )
@@ -168,7 +182,7 @@ namespace Gateway.Service
                 {
                     TcpClient clientSocket = this.listenSocket.AcceptTcpClient();
 
-                    Console.WriteLine( "GatewayClient: Client connected" );
+                    Console.WriteLine( "GatewayService: Client connected" );
                     var client = new ClientSession( clientSocket, this );
 
                     lock( this.clientMap )
