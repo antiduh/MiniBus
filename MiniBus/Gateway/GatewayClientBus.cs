@@ -13,7 +13,7 @@ namespace MiniBus.Gateway
 
         private Thread receiveThread;
 
-        private GatewayConnection tlvStream;
+        private GatewayConnection gatewayConn;
 
         private MsgDefRegistry msgDefs;
 
@@ -35,7 +35,9 @@ namespace MiniBus.Gateway
             this.contractReg.Register<GatewayResponseMsg>();
             this.contractReg.Register<GatewayHeartbeatResponse>();
 
-            this.tlvStream = new GatewayConnection( this.hostList, this.contractReg );
+            this.gatewayConn = new GatewayConnection( this.hostList, this.contractReg );
+            this.gatewayConn.ConnectionLost += GatewayConn_ConnectionLost;
+            this.gatewayConn.ConnectionRestored += GatewayConn_ConnectionRestored;
         }
 
         public event Action Connected;
@@ -47,7 +49,8 @@ namespace MiniBus.Gateway
             this.receiveThread = new Thread( ReceiveThreadEntry );
             this.receiveThread.Start();
 
-            this.tlvStream.Connect();
+            this.gatewayConn.Connect();
+            this.Connected?.Invoke();
         }
 
         public void DeclareMessage<T>() where T : ITlvContract, new()
@@ -103,7 +106,19 @@ namespace MiniBus.Gateway
                 Message = msg
             };
 
-            this.tlvStream.Write( gatewayMsg );
+            this.gatewayConn.Write( gatewayMsg );
+        }
+
+        private void GatewayConn_ConnectionLost()
+        {
+            Console.WriteLine( "GatewayClient: Lost connection. Reconnecting ... " );
+            this.ConnectionLost?.Invoke();
+        }
+
+        private void GatewayConn_ConnectionRestored()
+        {
+            Console.WriteLine( "GatewayClient: Lost connection. Reconnecting ... done" );
+            this.Connected?.Invoke();
         }
 
         private void ReceiveThreadEntry()
@@ -122,7 +137,7 @@ namespace MiniBus.Gateway
         {
             while( true )
             {
-                this.tlvStream.Connect();
+                this.gatewayConn.Connect();
 
                 try
                 {
@@ -130,7 +145,7 @@ namespace MiniBus.Gateway
                 }
                 catch( ChannelDownException ) { }
 
-                this.tlvStream.Disconnect();
+                this.gatewayConn.Disconnect();
             }
         }
 
@@ -140,7 +155,7 @@ namespace MiniBus.Gateway
 
             while( true )
             {
-                contract = this.tlvStream.Read();
+                contract = this.gatewayConn.Read();
 
                 if( contract == null )
                 {
