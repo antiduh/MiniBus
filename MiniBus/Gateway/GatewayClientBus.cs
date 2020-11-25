@@ -137,15 +137,13 @@ namespace MiniBus.Gateway
         {
             while( true )
             {
-                this.gatewayConn.Connect();
+                this.gatewayConn.WaitConnected();
 
                 try
                 {
                     ReadLoop();
                 }
                 catch( ChannelDownException ) { }
-
-                this.gatewayConn.Disconnect();
             }
         }
 

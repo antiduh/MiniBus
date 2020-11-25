@@ -75,6 +75,11 @@ namespace MiniBus.Gateway
             }
         }
 
+        public void WaitConnected()
+        {
+            this.connectedWaiter.Wait();
+        }
+
         public void Dispose()
         {
             Disconnect();
@@ -163,13 +168,13 @@ namespace MiniBus.Gateway
 
         private void DisconnectInternal()
         {
-            this.connectionLoop?.Cancel();
-            this.connectionLoop = null;
-
             if( this.connected == false )
             {
                 return;
             }
+
+            this.connectionLoop?.Cancel();
+            this.connectionLoop = null;
 
             this.connectedWaiter.Reset();
 
