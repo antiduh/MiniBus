@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net.Sockets;
 using System.Threading;
 using MiniBus;
@@ -67,9 +68,9 @@ namespace Gateway.Service
                 {
                     ReadLoop();
                 }
+                catch( IOException ) { }
                 catch( Exception e )
                 {
-                    // TODO
                     Console.WriteLine( "GatewayService: Client session crashed: " + e.GetType() );
                 }
 
