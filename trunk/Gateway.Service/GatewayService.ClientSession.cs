@@ -86,21 +86,18 @@ namespace Gateway.Service
 
             private void ReadLoop()
             {
+                ITlvContract contract;
+
                 while( true )
                 {
-                    ITlvContract contract;
+                    contract = this.tlvReader.ReadContract();
 
-                    while( true )
+                    if( contract == null )
                     {
-                        contract = this.tlvReader.ReadContract();
-
-                        if( contract == null )
-                        {
-                            break;
-                        }
-
-                        ProcessReceived( contract );
+                        break;
                     }
+
+                    ProcessReceived( contract );
                 }
             }
 
