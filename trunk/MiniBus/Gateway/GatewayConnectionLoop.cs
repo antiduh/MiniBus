@@ -20,6 +20,7 @@ namespace MiniBus.Gateway
             this.hostList = hostList;
             this.retryDelay = retryDelay;
             this.completedCallback = completedCallback;
+
             this.thread = new Thread( ThreadEntry );
             this.thread.Start();
         }

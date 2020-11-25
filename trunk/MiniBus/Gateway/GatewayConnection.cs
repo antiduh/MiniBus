@@ -158,10 +158,10 @@ namespace MiniBus.Gateway
             }
             else
             {
-                this.connectionLoop = new GatewayConnectionLoop( 
-                    this.hostList, 
+                this.connectionLoop = new GatewayConnectionLoop(
+                    this.hostList,
                     TimeSpan.FromSeconds( 1 ),
-                    ConnectionLoop_Completed 
+                    ConnectionLoop_Completed
                 );
             }
         }
@@ -197,7 +197,7 @@ namespace MiniBus.Gateway
             {
                 this.tcpClient = newClient;
                 this.tcpStream = this.tcpClient.GetStream();
-                
+
                 this.tlvReader = new TlvStreamReader( this.tcpStream, this.contractReg );
                 this.tlvWriter = new TlvStreamWriter( this.tcpStream );
 
