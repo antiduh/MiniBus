@@ -74,7 +74,7 @@ namespace Gateway.Service
                     Console.WriteLine( "GatewayService: Client session crashed: " + e.GetType() );
                 }
 
-                Console.WriteLine( "GatewayService: Client stopping." );
+                Console.WriteLine( "GatewayService: Client disconnected." );
 
                 this.parent.DisconnectClient( this );
 
