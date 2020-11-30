@@ -125,25 +125,20 @@ namespace MiniBus.Gateway
         {
             try
             {
-                ConnectionLoop();
+                while( true )
+                {
+                    this.gatewayConn.WaitConnected();
+
+                    try
+                    {
+                        ReadLoop();
+                    }
+                    catch( ChannelDownException ) { }
+                }
             }
             catch( Exception e )
             {
                 Console.WriteLine( "GatewayClientBus: Receiver stopped due to exception:\r\n" + e );
-            }
-        }
-
-        private void ConnectionLoop()
-        {
-            while( true )
-            {
-                this.gatewayConn.WaitConnected();
-
-                try
-                {
-                    ReadLoop();
-                }
-                catch( ChannelDownException ) { }
             }
         }
 
