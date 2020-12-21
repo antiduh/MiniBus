@@ -32,7 +32,7 @@ namespace MiniBus
 
         public void Add<T>() where T : ITlvContract
         {
-            Get<T>();
+            AddFromType( typeof( T ) );
         }
 
         /// <summary>
