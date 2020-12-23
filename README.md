@@ -1,10 +1,13 @@
 # MiniBus
 
-This project is an experiment to try building a Application Service Bus in the vein of MassTransit or Rebus that supports automatic gatewaying.
+This project is an experiment to try building an Application Service Bus in the vein of MassTransit or Rebus that supports automatic gatewaying.
 
 This project is not meant to be used in anything serious, so please don't use it so.
 
-The code poste here is available under the BSD 2-Clause license:
+Note that this project depends on a TLV library also of my creation, available here:
+https://github.com/antiduh/PocketTlv
+
+The code posted here is available under the BSD 2-Clause license:
 
 
 Copyright (c) 2020, Kevin Thompson
